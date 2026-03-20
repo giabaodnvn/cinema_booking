@@ -1,0 +1,170 @@
+<% content_for :title, "Đơn vé #{@booking.booking_code} – Admin" %>
+
+<% showtime = @booking.showtime %>
+<% movie    = showtime.movie %>
+<% cinema   = showtime.room.cinema %>
+
+<div class="max-w-4xl">
+
+  <%# ── BREADCRUMB ── %>
+  <nav class="text-sm text-gray-400 mb-6 flex items-center gap-2">
+    <%= link_to "Đặt vé", admin_bookings_path, class: "hover:text-white transition-colors" %>
+    <span>/</span>
+    <span class="text-white font-mono"><%= @booking.booking_code %></span>
+  </nav>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+    <%# ── LEFT: MAIN DETAILS ── %>
+    <div class="lg:col-span-2 space-y-5">
+
+      <%# Code + status %>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-start justify-between">
+        <div>
+          <p class="text-xs text-gray-500 mb-1">Mã đặt vé</p>
+          <p class="text-2xl font-mono font-bold text-white tracking-wider"><%= @booking.booking_code %></p>
+          <p class="text-xs text-gray-500 mt-1">Tạo lúc <%= I18n.l(@booking.created_at, format: :short) %></p>
+        </div>
+        <div class="text-right">
+          <%= booking_status_badge(@booking.status) %>
+          <span class="block mt-2 px-2 py-0.5 rounded text-xs font-medium
+                       <%= @booking.offline? ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400' %>">
+            <%= booking_type_label(@booking.booking_type) %>
+          </span>
+        </div>
+      </div>
+
+      <%# Movie + showtime %>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Suất chiếu</h2>
+        <div class="flex items-start gap-4">
+          <div class="w-16 h-22 rounded-lg bg-gray-800 shrink-0 overflow-hidden">
+            <% if movie.poster.attached? %>
+              <%= image_tag movie.poster, class: "w-full h-full object-cover" %>
+            <% else %>
+              <div class="w-full h-full flex items-center justify-center text-xl font-bold text-gray-600">
+                <%= movie.title.first.upcase %>
+              </div>
+            <% end %>
+          </div>
+          <div class="flex-1 space-y-3 text-sm">
+            <p class="text-base font-bold text-white"><%= movie.title %></p>
+            <div class="grid grid-cols-2 gap-3">
+              <% [
+                   ["Rạp chiếu",   cinema.name],
+                   ["Phòng",       "#{showtime.room.name} (#{room_type_label(showtime.room.room_type)})"],
+                   ["Ngày chiếu",  I18n.l(showtime.start_time.to_date, format: :long)],
+                   ["Giờ chiếu",   "#{I18n.l(showtime.start_time, format: :time)} – #{I18n.l(showtime.end_time, format: :time)}"]
+                 ].each do |label, value| %>
+                <div>
+                  <p class="text-xs text-gray-500 mb-0.5"><%= label %></p>
+                  <p class="text-gray-200"><%= value %></p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <%# Seats %>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
+          Ghế ngồi (<%= @booking.booking_seats.size %> ghế)
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          <% @booking.booking_seats.each do |bs| %>
+            <div class="flex flex-col items-center bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 min-w-14">
+              <span class="text-base font-bold text-white font-mono"><%= bs.seat.label %></span>
+              <span class="text-xs text-gray-400 mt-0.5 capitalize"><%= bs.seat.seat_type %></span>
+              <span class="text-xs text-gray-500 mt-0.5"><%= format_price(bs.price) %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+    </div>
+
+    <%# ── RIGHT: SIDEBAR ── %>
+    <div class="space-y-5">
+
+      <%# Customer info %>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Khách hàng</h2>
+        <div class="space-y-3 text-sm">
+          <div>
+            <p class="text-xs text-gray-500 mb-0.5">Tên</p>
+            <p class="text-white font-medium"><%= @booking.customer_display_name %></p>
+          </div>
+          <% if @booking.user %>
+            <div>
+              <p class="text-xs text-gray-500 mb-0.5">Email</p>
+              <p class="text-gray-300"><%= @booking.user.email %></p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 mb-0.5">SĐT tài khoản</p>
+              <p class="text-gray-300"><%= @booking.user.phone.presence || "—" %></p>
+            </div>
+          <% end %>
+          <% if @booking.guest_phone.present? %>
+            <div>
+              <p class="text-xs text-gray-500 mb-0.5">SĐT khách vãng lai</p>
+              <p class="text-gray-300"><%= @booking.guest_phone %></p>
+            </div>
+          <% end %>
+          <% if @booking.created_by.present? %>
+            <div class="pt-2 border-t border-gray-800">
+              <p class="text-xs text-gray-500 mb-0.5">Nhân viên tạo vé</p>
+              <p class="text-gray-300"><%= @booking.created_by.name %></p>
+              <span class="text-xs text-gray-500"><%= @booking.created_by.role.capitalize %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Payment %>
+      <% if @booking.payment %>
+        <% p = @booking.payment %>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Thanh toán</h2>
+          <div class="space-y-3 text-sm">
+            <div>
+              <p class="text-xs text-gray-500 mb-0.5">Phương thức</p>
+              <p class="text-white"><%= payment_method_label(p.method) %></p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 mb-0.5">Trạng thái</p>
+              <% css = p.completed? ? "text-green-400" : (p.failed? ? "text-red-400" : "text-yellow-400") %>
+              <p class="font-medium <%= css %>">
+                <%= { "pending" => "Chờ thanh toán", "completed" => "Đã thanh toán",
+                      "failed" => "Thất bại", "refunded" => "Đã hoàn tiền" }[p.status] %>
+              </p>
+            </div>
+            <% if p.paid_at.present? %>
+              <div>
+                <p class="text-xs text-gray-500 mb-0.5">Thời điểm thu</p>
+                <p class="text-gray-300"><%= I18n.l(p.paid_at, format: :short) %></p>
+              </div>
+            <% end %>
+            <% if p.transaction_code.present? %>
+              <div>
+                <p class="text-xs text-gray-500 mb-0.5">Mã GD</p>
+                <p class="font-mono text-gray-300 text-xs"><%= p.transaction_code %></p>
+              </div>
+            <% end %>
+            <div class="border-t border-gray-800 pt-3 flex items-center justify-between">
+              <span class="text-gray-400">Tổng</span>
+              <span class="text-xl font-bold text-white"><%= format_price(@booking.total_amount) %></span>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+    </div>
+  </div>
+
+  <%# Back %>
+  <div class="mt-6">
+    <%= link_to "← Quay lại danh sách", admin_bookings_path,
+          class: "text-sm text-gray-400 hover:text-white transition-colors" %>
+  </div>
+</div>

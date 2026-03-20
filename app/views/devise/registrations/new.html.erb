@@ -1,0 +1,69 @@
+<div class="min-h-screen flex items-center justify-center py-12 px-4">
+  <div class="w-full max-w-sm">
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-red-600 mb-4">
+        <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-white">Create your account</h1>
+      <p class="text-sm text-gray-400 mt-1">Join CinemaBook today</p>
+    </div>
+
+    <div class="bg-gray-900 rounded-2xl border border-gray-800 p-6">
+      <%= render "devise/shared/error_messages", resource: resource %>
+
+      <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
+        <div class="space-y-4">
+          <div>
+            <%= f.label :name, class: "block text-sm font-medium text-gray-300 mb-1" %>
+            <%= f.text_field :name, autofocus: true, autocomplete: "name",
+                class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent",
+                placeholder: "Your full name" %>
+          </div>
+
+          <div>
+            <%= f.label :email, class: "block text-sm font-medium text-gray-300 mb-1" %>
+            <%= f.email_field :email, autocomplete: "email",
+                class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent",
+                placeholder: "you@example.com" %>
+          </div>
+
+          <div>
+            <%= f.label :phone, "Phone (optional)", class: "block text-sm font-medium text-gray-300 mb-1" %>
+            <%= f.telephone_field :phone, autocomplete: "tel",
+                class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent",
+                placeholder: "+84 xxx xxx xxx" %>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <%= f.label :password, class: "text-sm font-medium text-gray-300" %>
+              <% if @minimum_password_length %>
+                <span class="text-xs text-gray-500"><%= @minimum_password_length %> chars min</span>
+              <% end %>
+            </div>
+            <%= f.password_field :password, autocomplete: "new-password",
+                class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent",
+                placeholder: "••••••••" %>
+          </div>
+
+          <div>
+            <%= f.label :password_confirmation, class: "block text-sm font-medium text-gray-300 mb-1" %>
+            <%= f.password_field :password_confirmation, autocomplete: "new-password",
+                class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent",
+                placeholder: "••••••••" %>
+          </div>
+
+          <%= f.submit "Create account", class: "w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors cursor-pointer mt-2" %>
+        </div>
+      <% end %>
+    </div>
+
+    <p class="text-center text-sm text-gray-400 mt-6">
+      Already have an account?
+      <%= link_to "Sign in", new_session_path(resource_name), class: "text-red-400 hover:text-red-300 font-medium" %>
+    </p>
+  </div>
+</div>

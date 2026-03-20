@@ -1,0 +1,110 @@
+<% content_for :title, "CinemaBook – Đặt Vé Xem Phim" %>
+
+<%# ── HERO ──────────────────────────────────────────────── %>
+<section class="relative -mx-4 sm:-mx-6 lg:-mx-8 -mt-8 mb-12 overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-br from-gray-950 via-gray-900 to-red-950"></div>
+  <div class="absolute inset-0 opacity-10"
+       style="background-image: radial-gradient(circle at 20% 50%, #ef4444 0%, transparent 50%), radial-gradient(circle at 80% 20%, #dc2626 0%, transparent 40%)">
+  </div>
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1 bg-red-600/20 border border-red-500/30 rounded-full text-red-400 text-xs font-medium mb-6">
+      <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
+      <%= Movie.now_showing.count %> phim đang chiếu
+    </div>
+    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-5 leading-tight">
+      Trải nghiệm điện ảnh<br><span class="text-red-500">đỉnh cao</span>
+    </h1>
+    <p class="text-lg text-gray-400 mb-8 max-w-lg mx-auto">
+      Khám phá phim mới nhất, chọn suất chiếu và đặt vé chỉ trong vài giây.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <%= link_to "Xem phim đang chiếu", movies_path(status: "now_showing"),
+          class: "px-7 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold transition-colors shadow-lg shadow-red-900/40" %>
+      <%= link_to "Phim sắp chiếu", movies_path(status: "upcoming"),
+          class: "px-7 py-3 border border-gray-700 hover:bg-gray-800 rounded-xl font-semibold transition-colors" %>
+    </div>
+  </div>
+</section>
+
+<%# ── NOW SHOWING ─────────────────────────────────────────── %>
+<section class="mb-14">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-white">Đang chiếu</h2>
+      <p class="text-sm text-gray-500 mt-0.5">Phim đang có mặt tại rạp</p>
+    </div>
+    <%= link_to "Xem tất cả →", movies_path(status: "now_showing"),
+        class: "text-sm text-red-400 hover:text-red-300 transition-colors font-medium" %>
+  </div>
+
+  <% if @now_showing.any? %>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" id="now-showing-grid">
+      <% @now_showing.each do |movie| %>
+        <%= render "movies/movie_card", movie: movie %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-12 text-gray-600">Chưa có phim đang chiếu.</div>
+  <% end %>
+</section>
+
+<%# ── COMING SOON ──────────────────────────────────────────── %>
+<% if @coming_soon.any? %>
+<section class="mb-14">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-white">Sắp chiếu</h2>
+      <p class="text-sm text-gray-500 mt-0.5">Đặt chỗ trước – đừng bỏ lỡ</p>
+    </div>
+    <%= link_to "Xem tất cả →", movies_path(status: "upcoming"),
+        class: "text-sm text-blue-400 hover:text-blue-300 transition-colors font-medium" %>
+  </div>
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+    <% @coming_soon.each do |movie| %>
+      <%= render "movies/movie_card", movie: movie %>
+    <% end %>
+  </div>
+</section>
+<% end %>
+
+<%# ── CINEMA SELECTOR ──────────────────────────────────────── %>
+<% if @cinemas.any? %>
+<section class="mb-8">
+  <h2 class="text-2xl font-bold text-white mb-6">Hệ thống rạp chiếu</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <% @cinemas.each do |cinema| %>
+      <div class="group bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-xl p-5 transition-all">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-lg bg-red-600/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-white group-hover:text-red-400 transition-colors truncate">
+              <%= cinema.name %>
+            </h3>
+            <p class="text-sm text-gray-500 mt-0.5 truncate"><%= cinema.address %></p>
+            <div class="flex items-center gap-3 mt-2">
+              <span class="inline-flex items-center gap-1 text-xs text-gray-400">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                </svg>
+                <%= cinema.city %>
+              </span>
+              <% if cinema.phone.present? %>
+                <span class="text-xs text-gray-600"><%= cinema.phone %></span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        <%= link_to "Xem lịch chiếu →", movies_path(city: cinema.city),
+            class: "mt-4 block text-right text-sm text-red-400 hover:text-red-300 transition-colors" %>
+      </div>
+    <% end %>
+  </div>
+</section>
+<% end %>

@@ -1,0 +1,48 @@
+<% content_for :page_title, "Suất chiếu – #{@showtime.movie.title}" %>
+
+<div class="max-w-3xl">
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3 text-sm text-gray-400">
+      <%= link_to "Suất chiếu", admin_showtimes_path, class: "hover:text-white" %>
+      <span>/</span>
+      <span class="text-gray-300 truncate max-w-52"><%= @showtime.movie.title %></span>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "Sửa", edit_admin_showtime_path(@showtime),
+            class: "px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 text-sm font-medium rounded-lg transition-colors" %>
+      <%= link_to "Xoá", admin_showtime_path(@showtime),
+            data: { turbo_method: :delete, turbo_confirm: "Xoá suất chiếu này?" },
+            class: "px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-sm rounded-lg border border-red-600/30 transition-colors" %>
+    </div>
+  </div>
+
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+      <% [
+           ["Phim",        @showtime.movie.title],
+           ["Rạp chiếu",  @showtime.room.cinema.name],
+           ["Phòng",       "#{@showtime.room.name} (#{room_type_label(@showtime.room.room_type)})"],
+           ["Ngày chiếu",  I18n.l(@showtime.start_time.to_date, format: :long)],
+           ["Giờ chiếu",  "#{I18n.l(@showtime.start_time, format: :time)} – #{I18n.l(@showtime.end_time, format: :time)}"],
+           ["Giá vé",      format_price(@showtime.price)]
+         ].each do |label, val| %>
+        <div>
+          <p class="text-xs text-gray-500 mb-0.5"><%= label %></p>
+          <p class="text-gray-200"><%= val %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="border-t border-gray-800 pt-4">
+      <% st_css = { "scheduled" => "bg-green-500/20 text-green-400", "cancelled" => "bg-red-500/20 text-red-400", "finished" => "bg-gray-600/30 text-gray-400" }[@showtime.status] %>
+      <span class="px-3 py-1 rounded-full text-sm font-medium <%= st_css %>">
+        <%= { "scheduled" => "Lịch chiếu", "cancelled" => "Đã huỷ", "finished" => "Hoàn thành" }[@showtime.status] %>
+      </span>
+    </div>
+
+    <div class="border-t border-gray-800 pt-4 flex items-center justify-between text-sm">
+      <span class="text-gray-400">Tổng đơn đặt vé</span>
+      <span class="font-bold text-white"><%= @showtime.bookings.count %></span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,34 @@
+<div class="space-y-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="sm:col-span-2">
+      <label class="block text-xs text-gray-400 mb-1">Tên rạp <span class="text-red-400">*</span></label>
+      <%= f.text_field :name, placeholder: "VD: CGV Vincom Center",
+            class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500" %>
+    </div>
+    <div class="sm:col-span-2">
+      <label class="block text-xs text-gray-400 mb-1">Địa chỉ <span class="text-red-400">*</span></label>
+      <%= f.text_field :address, placeholder: "Số nhà, đường, quận…",
+            class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-400 mb-1">Thành phố <span class="text-red-400">*</span></label>
+      <%= f.text_field :city, placeholder: "Hà Nội, TP.HCM…",
+            class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-400 mb-1">SĐT</label>
+      <%= f.telephone_field :phone, placeholder: "028 1234 5678",
+            class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-400 mb-1">Trạng thái</label>
+      <%= f.select :status, [["Hoạt động", "active"], ["Tạm dừng", "inactive"]], {},
+            class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-yellow-500" %>
+    </div>
+  </div>
+</div>

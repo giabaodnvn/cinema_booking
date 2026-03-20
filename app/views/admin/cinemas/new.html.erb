@@ -1,0 +1,18 @@
+<% content_for :page_title, "Thêm rạp mới" %>
+<div class="max-w-xl">
+  <div class="flex items-center gap-3 mb-6">
+    <%= link_to "← Rạp chiếu", admin_cinemas_path, class: "text-sm text-gray-400 hover:text-white" %>
+    <span class="text-gray-700">/</span>
+    <span class="text-sm text-gray-300">Thêm mới</span>
+  </div>
+  <%= render "admin/shared/errors", record: @cinema %>
+  <%= form_with model: [:admin, @cinema], local: true do |f| %>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-5">
+      <%= render "form", f: f %>
+    </div>
+    <div class="flex gap-3">
+      <%= f.submit "Tạo rạp", class: "px-5 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg cursor-pointer transition-colors" %>
+      <%= link_to "Huỷ", admin_cinemas_path, class: "px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg transition-colors" %>
+    </div>
+  <% end %>
+</div>

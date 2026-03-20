@@ -1,0 +1,59 @@
+<%# Expects: @movie, @rooms, @cinemas, f %>
+
+<div class="space-y-4">
+  <%# Movie (read-only when nested under movie) %>
+  <div>
+    <label class="block text-xs text-gray-400 mb-1">Phim</label>
+    <% if @movie %>
+      <div class="w-full bg-gray-800/50 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-300">
+        <%= @movie.title %>
+      </div>
+    <% else %>
+      <%= f.collection_select :movie_id, Movie.order(:title), :id, :title, { prompt: "— Chọn phim —" },
+            class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-yellow-500" %>
+    <% end %>
+  </div>
+
+  <div>
+    <label class="block text-xs text-gray-400 mb-1">Phòng chiếu <span class="text-red-400">*</span></label>
+    <%= f.grouped_collection_select :room_id, @cinemas, :rooms, :name, :id, :name,
+          { prompt: "— Chọn phòng —", selected: f.object.room_id },
+          class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                  focus:outline-none focus:border-yellow-500" %>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs text-gray-400 mb-1">Giờ bắt đầu <span class="text-red-400">*</span></label>
+      <%= f.datetime_local_field :start_time,
+            class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-yellow-500" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-400 mb-1">Giờ kết thúc <span class="text-red-400">*</span></label>
+      <%= f.datetime_local_field :end_time,
+            class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-yellow-500" %>
+      <% if @movie %>
+        <p class="text-xs text-gray-600 mt-1">Thời lượng phim: <%= format_duration(@movie.duration) %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs text-gray-400 mb-1">Giá vé (₫) <span class="text-red-400">*</span></label>
+      <%= f.number_field :price, min: 0, step: 1000,
+            class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-yellow-500" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-400 mb-1">Trạng thái</label>
+      <%= f.select :status,
+            [["Lịch chiếu", "scheduled"], ["Đã huỷ", "cancelled"], ["Hoàn thành", "finished"]], {},
+            class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-yellow-500" %>
+    </div>
+  </div>
+</div>

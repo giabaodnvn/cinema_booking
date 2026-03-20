@@ -1,0 +1,73 @@
+<% content_for :page_title, "Người dùng" %>
+
+<div class="flex items-center justify-between mb-5">
+  <h1 class="text-xl font-bold text-white">Quản lý người dùng</h1>
+</div>
+
+<%# Filters %>
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-5">
+  <%= form_with url: admin_users_path, method: :get, local: true,
+        class: "flex flex-wrap gap-3 items-end" do |f| %>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Tìm kiếm</label>
+      <%= f.text_field :q, value: params[:q], placeholder: "Tên, email…",
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    placeholder-gray-600 focus:outline-none focus:border-yellow-500 w-52" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Vai trò</label>
+      <%= f.select :role,
+            [["Tất cả", ""], ["Khách hàng", "customer"], ["Nhân viên", "staff"], ["Admin", "admin"]],
+            { selected: params[:role] },
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-yellow-500" %>
+    </div>
+    <%= f.submit "Lọc", class: "px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg cursor-pointer" %>
+    <% if params[:q].present? || params[:role].present? %>
+      <%= link_to "Xoá lọc", admin_users_path, class: "px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg" %>
+    <% end %>
+  <% end %>
+</div>
+
+<div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+  <% if @users.empty? %>
+    <div class="px-5 py-12 text-center text-gray-500 text-sm">Không tìm thấy người dùng.</div>
+  <% else %>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-800 text-left">
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Tên / Email</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">SĐT</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Vai trò</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Đăng ký</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-800">
+        <% @users.each do |user| %>
+          <tr class="hover:bg-gray-800/40 transition-colors">
+            <td class="px-4 py-3">
+              <p class="font-medium text-white"><%= user.name %></p>
+              <p class="text-xs text-gray-400 mt-0.5"><%= user.email %></p>
+            </td>
+            <td class="px-4 py-3 text-gray-300"><%= user.phone.presence || "—" %></td>
+            <td class="px-4 py-3">
+              <% css = { "customer" => "bg-gray-600/30 text-gray-300", "staff" => "bg-blue-500/20 text-blue-400", "admin" => "bg-yellow-500/20 text-yellow-400" }[user.role] %>
+              <span class="px-2 py-0.5 rounded text-xs font-medium <%= css %>">
+                <%= { "customer" => "Khách hàng", "staff" => "Nhân viên", "admin" => "Admin" }[user.role] %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-400 text-xs"><%= I18n.l(user.created_at, format: :short) %></td>
+            <td class="px-4 py-3 flex gap-2 justify-end">
+              <%= link_to "Xem", admin_user_path(user), class: "text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-lg transition-colors" %>
+              <%= link_to "Sửa", edit_admin_user_path(user), class: "text-xs px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded-lg transition-colors" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <div class="px-5 py-4 border-t border-gray-800">
+      <%= pagy_tailwind_nav(@pagy) %>
+    </div>
+  <% end %>
+</div>

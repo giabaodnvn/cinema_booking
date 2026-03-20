@@ -1,0 +1,13 @@
+<%# Usage: <%= render "admin/shared/errors", record: @movie %> %>
+<% if record.errors.any? %>
+  <div class="bg-red-900/30 border border-red-700/50 rounded-xl px-5 py-4 mb-5">
+    <p class="text-sm font-semibold text-red-300 mb-2">
+      Có <%= record.errors.count %> lỗi cần sửa:
+    </p>
+    <ul class="list-disc list-inside space-y-1">
+      <% record.errors.full_messages.each do |msg| %>
+        <li class="text-sm text-red-400"><%= msg %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

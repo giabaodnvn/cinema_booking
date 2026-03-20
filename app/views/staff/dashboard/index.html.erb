@@ -1,0 +1,31 @@
+<div class="space-y-6">
+  <!-- Welcome banner -->
+  <div class="bg-blue-600/10 border border-blue-500/30 rounded-xl p-5">
+    <h2 class="text-lg font-semibold text-white mb-1">Welcome back, <%= current_user.name %>!</h2>
+    <p class="text-sm text-gray-400">Here's what's happening at the cinema today.</p>
+  </div>
+
+  <!-- Quick stats -->
+  <div class="grid grid-cols-3 gap-4">
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
+      <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Today's Showtimes</p>
+      <p class="text-2xl font-bold text-white">0</p>
+    </div>
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
+      <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Pending Bookings</p>
+      <p class="text-2xl font-bold text-white">0</p>
+    </div>
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
+      <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Checked In</p>
+      <p class="text-2xl font-bold text-white">0</p>
+    </div>
+  </div>
+
+  <!-- Upcoming showtimes placeholder -->
+  <div class="bg-gray-900 rounded-xl border border-gray-800 p-6">
+    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Upcoming Showtimes</h2>
+    <div class="flex items-center justify-center h-32 text-gray-600 text-sm">
+      No showtimes scheduled
+    </div>
+  </div>
+</div>

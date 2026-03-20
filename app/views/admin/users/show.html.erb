@@ -1,0 +1,91 @@
+<% content_for :page_title, @user.name %>
+
+<div class="max-w-3xl">
+  <div class="flex items-center gap-3 mb-6">
+    <%= link_to "← Người dùng", admin_users_path, class: "text-sm text-gray-400 hover:text-white" %>
+    <span class="text-gray-700">/</span>
+    <span class="text-sm text-gray-300"><%= @user.name %></span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+    <div class="lg:col-span-2 space-y-5">
+      <%# Profile card %>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <div class="flex items-start justify-between mb-5">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-full bg-yellow-500/20 border border-yellow-500/40
+                        flex items-center justify-center text-xl font-bold text-yellow-400">
+              <%= @user.name[0].upcase %>
+            </div>
+            <div>
+              <p class="text-lg font-bold text-white"><%= @user.name %></p>
+              <p class="text-sm text-gray-400"><%= @user.email %></p>
+            </div>
+          </div>
+          <%= link_to "Sửa", edit_admin_user_path(@user),
+                class: "px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 text-xs font-medium rounded-lg transition-colors" %>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <p class="text-xs text-gray-500 mb-0.5">Vai trò</p>
+            <% css = { "customer" => "bg-gray-600/30 text-gray-300", "staff" => "bg-blue-500/20 text-blue-400", "admin" => "bg-yellow-500/20 text-yellow-400" }[@user.role] %>
+            <span class="px-2 py-0.5 rounded text-xs font-medium <%= css %>">
+              <%= { "customer" => "Khách hàng", "staff" => "Nhân viên", "admin" => "Admin" }[@user.role] %>
+            </span>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 mb-0.5">SĐT</p>
+            <p class="text-gray-300"><%= @user.phone.presence || "—" %></p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 mb-0.5">Ngày đăng ký</p>
+            <p class="text-gray-300"><%= I18n.l(@user.created_at, format: :short) %></p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 mb-0.5">Tổng đơn vé</p>
+            <p class="text-gray-300"><%= @user.bookings.count %></p>
+          </div>
+        </div>
+      </div>
+
+      <%# Recent bookings %>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl">
+        <div class="px-5 py-4 border-b border-gray-800">
+          <p class="text-sm font-semibold text-white">Đặt vé gần đây</p>
+        </div>
+        <% if @recent_bookings.empty? %>
+          <div class="px-5 py-8 text-center text-gray-600 text-sm">Chưa có đơn vé nào.</div>
+        <% else %>
+          <div class="divide-y divide-gray-800">
+            <% @recent_bookings.each do |b| %>
+              <div class="px-5 py-3 flex items-center justify-between">
+                <div>
+                  <p class="font-mono text-xs text-white font-bold"><%= b.booking_code %></p>
+                  <p class="text-xs text-gray-400 mt-0.5"><%= b.showtime.movie.title %></p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <%= booking_status_badge(b.status) %>
+                  <span class="text-sm font-bold text-white"><%= format_price(b.total_amount) %></span>
+                  <%= link_to "→", admin_booking_path(b), class: "text-yellow-400 hover:text-yellow-300 text-sm" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <p class="text-xs text-gray-500 uppercase tracking-wide mb-3">Hành động</p>
+        <%= link_to "Sửa thông tin", edit_admin_user_path(@user),
+              class: "block w-full text-center py-2 text-sm bg-yellow-500 hover:bg-yellow-400
+                      text-gray-900 font-bold rounded-lg transition-colors mb-2" %>
+        <%= link_to "Xem tất cả đơn vé", admin_bookings_path,
+              class: "block w-full text-center py-2 text-sm bg-gray-700 hover:bg-gray-600
+                      text-gray-300 rounded-lg transition-colors" %>
+      </div>
+    </div>
+  </div>
+</div>

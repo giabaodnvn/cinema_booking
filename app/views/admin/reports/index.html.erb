@@ -1,0 +1,248 @@
+<% content_for :title, "Báo cáo doanh thu – Admin" %>
+<% content_for :page_title, "Báo cáo doanh thu" %>
+
+<%# ── Load Chart.js + Chartkick from CDN ── %>
+<% content_for :head do %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartkick@5.0.1/dist/chartkick.min.js"></script>
+<% end %>
+
+<%# ── DATE RANGE FILTER ── %>
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-6">
+  <div class="flex flex-wrap items-center gap-3">
+
+    <%# Preset buttons %>
+    <% [["today","Hôm nay"], ["7d","7 ngày"], ["30d","30 ngày"], ["this_month","Tháng này"]].each do |val, label| %>
+      <%= link_to label, admin_reports_path(preset: val),
+            class: "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
+                    #{@preset == val ? 'bg-yellow-500 text-gray-900' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}" %>
+    <% end %>
+
+    <span class="text-gray-600 text-sm">|</span>
+
+    <%# Custom range form %>
+    <%= form_with url: admin_reports_path, method: :get, local: true,
+          class: "flex items-center gap-2" do |f| %>
+      <%= f.hidden_field :preset, value: "custom" %>
+      <%= f.date_field :start_date, value: (@preset == "custom" ? @start_date : nil),
+            placeholder: "Từ ngày",
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white
+                    focus:outline-none focus:border-yellow-500" %>
+      <span class="text-gray-500 text-sm">→</span>
+      <%= f.date_field :end_date, value: (@preset == "custom" ? @end_date : nil),
+            placeholder: "Đến ngày",
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white
+                    focus:outline-none focus:border-yellow-500" %>
+      <%= f.submit "Xem",
+            class: "px-4 py-1.5 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-semibold
+                    rounded-lg transition-colors cursor-pointer" %>
+    <% end %>
+
+    <span class="ml-auto text-xs text-gray-500">
+      <%= @start_date.strftime("%d/%m/%Y") %> – <%= @end_date.strftime("%d/%m/%Y") %>
+    </span>
+  </div>
+</div>
+
+<%# ── SUMMARY CARDS ── %>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="bg-gray-900 border border-gray-800 rounded-xl px-5 py-4">
+    <p class="text-xs text-gray-500 mb-1">Doanh thu</p>
+    <p class="text-2xl font-bold text-yellow-400"><%= format_price(@report.total_revenue) %></p>
+  </div>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl px-5 py-4">
+    <p class="text-xs text-gray-500 mb-1">Đơn đặt vé (đã thu)</p>
+    <p class="text-2xl font-bold text-white"><%= number_with_delimiter(@report.total_bookings) %></p>
+  </div>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl px-5 py-4">
+    <p class="text-xs text-gray-500 mb-1">Vé đã bán</p>
+    <p class="text-2xl font-bold text-blue-400"><%= number_with_delimiter(@report.total_tickets) %></p>
+  </div>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl px-5 py-4">
+    <p class="text-xs text-gray-500 mb-1">Giá trị TB / đơn</p>
+    <p class="text-2xl font-bold text-green-400"><%= format_price(@report.avg_booking_value) %></p>
+  </div>
+</div>
+
+<%# ── REVENUE OVER TIME (line chart) ── %>
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+  <h2 class="text-sm font-semibold text-white mb-4">Doanh thu theo ngày</h2>
+  <% revenue_by_day = @report.revenue_by_day %>
+  <% if revenue_by_day.any? %>
+    <%= line_chart revenue_by_day,
+          colors: ["#EAB308"],
+          library: {
+            scales: {
+              x: { ticks: { color: "#9CA3AF" }, grid: { color: "#1F2937" } },
+              y: { ticks: { color: "#9CA3AF" }, grid: { color: "#1F2937" } }
+            },
+            plugins: { legend: { display: false } }
+          },
+          height: "260px" %>
+  <% else %>
+    <p class="text-gray-500 text-sm text-center py-10">Chưa có dữ liệu trong khoảng thời gian này.</p>
+  <% end %>
+</div>
+
+<%# ── ROW: by movie + by cinema ── %>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+  <%# By movie %>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <h2 class="text-sm font-semibold text-white mb-4">Doanh thu theo phim (top 10)</h2>
+    <% revenue_by_movie = @report.revenue_by_movie %>
+    <% if revenue_by_movie.any? %>
+      <%= bar_chart revenue_by_movie,
+            colors: ["#3B82F6"],
+            library: {
+              indexAxis: "y",
+              scales: {
+                x: { ticks: { color: "#9CA3AF" }, grid: { color: "#1F2937" } },
+                y: { ticks: { color: "#D1D5DB", font: { size: 11 } }, grid: { display: false } }
+              },
+              plugins: { legend: { display: false } }
+            },
+            height: "280px" %>
+    <% else %>
+      <p class="text-gray-500 text-sm text-center py-10">Chưa có dữ liệu.</p>
+    <% end %>
+  </div>
+
+  <%# By cinema %>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <h2 class="text-sm font-semibold text-white mb-4">Doanh thu theo rạp</h2>
+    <% revenue_by_cinema = @report.revenue_by_cinema %>
+    <% if revenue_by_cinema.any? %>
+      <%= bar_chart revenue_by_cinema,
+            colors: ["#8B5CF6"],
+            library: {
+              scales: {
+                x: { ticks: { color: "#9CA3AF" }, grid: { color: "#1F2937" } },
+                y: { ticks: { color: "#D1D5DB" }, grid: { display: false } }
+              },
+              plugins: { legend: { display: false } }
+            },
+            height: "280px" %>
+    <% else %>
+      <p class="text-gray-500 text-sm text-center py-10">Chưa có dữ liệu.</p>
+    <% end %>
+  </div>
+</div>
+
+<%# ── ROW: online vs offline + booking status ── %>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+  <%# Online vs offline pie chart %>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <h2 class="text-sm font-semibold text-white mb-4">Trực tuyến vs Tại quầy</h2>
+    <% online_vs_offline = @report.online_vs_offline %>
+    <% if online_vs_offline.any? %>
+      <%= pie_chart online_vs_offline,
+            colors: ["#8B5CF6", "#3B82F6"],
+            library: {
+              plugins: {
+                legend: { labels: { color: "#D1D5DB" } }
+              }
+            },
+            height: "240px" %>
+    <% else %>
+      <p class="text-gray-500 text-sm text-center py-10">Chưa có dữ liệu.</p>
+    <% end %>
+  </div>
+
+  <%# Booking status summary %>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <h2 class="text-sm font-semibold text-white mb-4">Trạng thái đặt vé</h2>
+    <% status_map = { "paid"      => ["Đã thanh toán", "text-green-400"],
+                      "pending"   => ["Chờ thanh toán", "text-yellow-400"],
+                      "cancelled" => ["Đã huỷ", "text-red-400"] } %>
+    <% summary = @report.booking_status_summary %>
+    <% if summary.any? %>
+      <div class="space-y-3 mt-2">
+        <% status_map.each do |status, (label, color)| %>
+          <% count = summary[status].to_i %>
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-400"><%= label %></span>
+            <span class="text-sm font-bold <%= color %>"><%= number_with_delimiter(count) %></span>
+          </div>
+          <% total_for_bar = summary.values.sum.to_f %>
+          <% bar_color = { "text-green-400" => "bg-green-400", "text-yellow-400" => "bg-yellow-400", "text-red-400" => "bg-red-400" }[color] || "bg-gray-400" %>
+          <div class="w-full bg-gray-800 rounded-full h-1.5">
+            <div class="h-1.5 rounded-full <%= bar_color %>"
+                 style="width: <%= total_for_bar > 0 ? (count / total_for_bar * 100).round(1) : 0 %>%"></div>
+          </div>
+        <% end %>
+      </div>
+      <p class="text-xs text-gray-600 mt-4">
+        Tổng: <%= number_with_delimiter(summary.values.sum) %> đơn trong kỳ
+      </p>
+    <% else %>
+      <p class="text-gray-500 text-sm text-center py-10">Chưa có dữ liệu.</p>
+    <% end %>
+  </div>
+</div>
+
+<%# ── DETAIL TABLES ── %>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+  <%# Movie table %>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-800">
+      <h2 class="text-sm font-semibold text-white">Chi tiết theo phim</h2>
+    </div>
+    <% movie_rows = @report.movie_table %>
+    <% if movie_rows.any? %>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left border-b border-gray-800">
+            <th class="px-4 py-2 text-xs text-gray-500 font-medium">Phim</th>
+            <th class="px-4 py-2 text-xs text-gray-500 font-medium text-center">Đơn</th>
+            <th class="px-4 py-2 text-xs text-gray-500 font-medium text-right">Doanh thu</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-800">
+          <% movie_rows.each do |title, count, revenue| %>
+            <tr class="hover:bg-gray-800/40 transition-colors">
+              <td class="px-4 py-2 text-gray-300 truncate max-w-40"><%= title %></td>
+              <td class="px-4 py-2 text-gray-400 text-center"><%= count %></td>
+              <td class="px-4 py-2 text-white font-semibold text-right"><%= format_price(revenue) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="text-gray-500 text-sm text-center py-8">Chưa có dữ liệu.</p>
+    <% end %>
+  </div>
+
+  <%# Cinema table %>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-800">
+      <h2 class="text-sm font-semibold text-white">Chi tiết theo rạp</h2>
+    </div>
+    <% cinema_rows = @report.cinema_table %>
+    <% if cinema_rows.any? %>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left border-b border-gray-800">
+            <th class="px-4 py-2 text-xs text-gray-500 font-medium">Rạp</th>
+            <th class="px-4 py-2 text-xs text-gray-500 font-medium text-center">Đơn</th>
+            <th class="px-4 py-2 text-xs text-gray-500 font-medium text-right">Doanh thu</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-800">
+          <% cinema_rows.each do |name, count, revenue| %>
+            <tr class="hover:bg-gray-800/40 transition-colors">
+              <td class="px-4 py-2 text-gray-300 truncate max-w-40"><%= name %></td>
+              <td class="px-4 py-2 text-gray-400 text-center"><%= count %></td>
+              <td class="px-4 py-2 text-white font-semibold text-right"><%= format_price(revenue) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="text-gray-500 text-sm text-center py-8">Chưa có dữ liệu.</p>
+    <% end %>
+  </div>
+
+</div>

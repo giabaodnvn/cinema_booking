@@ -1,0 +1,94 @@
+<% content_for :page_title, "Dashboard" %>
+
+<div class="space-y-6">
+
+  <%# ── ROW 1: KEY METRICS ── %>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <% [
+         { label: "Người dùng", value: @users_total,    sub: "tài khoản",   color: "text-yellow-400" },
+         { label: "Phim",       value: @movies_total,   sub: "#{@movies_active} đang chiếu", color: "text-purple-400" },
+         { label: "Suất hôm nay", value: @showtimes_today, sub: "#{@showtimes_week} trong tuần", color: "text-blue-400" },
+         { label: "Đặt vé hôm nay", value: @bookings_today, sub: "#{@pending_bookings} chờ xử lý", color: "text-orange-400" }
+       ].each do |s| %>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <p class="text-xs text-gray-500 uppercase tracking-wide mb-2"><%= s[:label] %></p>
+        <p class="text-3xl font-bold <%= s[:color] %>"><%= s[:value] %></p>
+        <p class="text-xs text-gray-600 mt-1"><%= s[:sub] %></p>
+      </div>
+    <% end %>
+  </div>
+
+  <%# ── ROW 2: REVENUE ── %>
+  <div class="grid grid-cols-2 gap-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+      <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Doanh thu hôm nay</p>
+      <p class="text-2xl font-bold text-green-400"><%= format_price(@revenue_today) %></p>
+      <p class="text-xs text-gray-600 mt-1">Thanh toán hoàn tất</p>
+    </div>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+      <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Doanh thu tháng này</p>
+      <p class="text-2xl font-bold text-green-300"><%= format_price(@revenue_month) %></p>
+      <p class="text-xs text-gray-600 mt-1"><%= Date.current.strftime("%B %Y") %></p>
+    </div>
+  </div>
+
+  <%# ── ROW 3: USERS BY ROLE ── %>
+  <div class="grid grid-cols-3 gap-4">
+    <% role_labels = { "0" => ["Khách hàng", "text-gray-300"], "1" => ["Nhân viên", "text-blue-400"], "2" => ["Admin", "text-yellow-400"] } %>
+    <% role_labels.each do |role_int, (label, color)| %>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-4 text-center">
+        <p class="text-xs text-gray-500 mb-1"><%= label %></p>
+        <p class="text-2xl font-bold <%= color %>"><%= @users_by_role[role_int.to_i] || 0 %></p>
+      </div>
+    <% end %>
+  </div>
+
+  <%# ── RECENT BOOKINGS ── %>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl">
+    <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+      <h2 class="text-sm font-semibold text-white">Đặt vé gần đây</h2>
+      <%= link_to "Xem tất cả →", admin_bookings_path,
+            class: "text-xs text-yellow-400 hover:text-yellow-300 transition-colors" %>
+    </div>
+
+    <% if @recent_bookings.empty? %>
+      <div class="px-5 py-10 text-center text-gray-600 text-sm">Chưa có đơn đặt vé nào.</div>
+    <% else %>
+      <div class="divide-y divide-gray-800">
+        <% @recent_bookings.each do |b| %>
+          <div class="px-5 py-3 flex items-center justify-between gap-4 hover:bg-gray-800/30 transition-colors">
+            <div class="flex items-center gap-4 min-w-0">
+              <p class="font-mono text-xs font-bold text-white shrink-0"><%= b.booking_code %></p>
+              <div class="min-w-0">
+                <p class="text-sm text-gray-300 truncate"><%= b.showtime.movie.title %></p>
+                <p class="text-xs text-gray-500">
+                  <%= b.showtime.room.cinema.name %> &bull; <%= I18n.l(b.showtime.start_time, format: :time) %>
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 shrink-0">
+              <%= booking_status_badge(b.status) %>
+              <span class="text-sm font-bold text-white w-24 text-right"><%= format_price(b.total_amount) %></span>
+              <%= link_to "Xem", admin_booking_path(b), class: "text-xs text-yellow-400 hover:text-yellow-300" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# ── QUICK LINKS ── %>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <% [
+         ["＋ Thêm phim",   new_admin_movie_path,   "bg-purple-600/20 border-purple-600/40 text-purple-400 hover:bg-purple-600/30"],
+         ["＋ Thêm rạp",    new_admin_cinema_path,  "bg-blue-600/20 border-blue-600/40 text-blue-400 hover:bg-blue-600/30"],
+         ["＋ Suất chiếu",  admin_showtimes_path,   "bg-green-600/20 border-green-600/40 text-green-400 hover:bg-green-600/30"],
+         ["Quản lý users", admin_users_path,       "bg-yellow-600/20 border-yellow-600/40 text-yellow-400 hover:bg-yellow-600/30"]
+       ].each do |label, path, css| %>
+      <%= link_to label, path,
+            class: "flex items-center justify-center px-4 py-3 border rounded-xl text-sm font-medium
+                    transition-colors #{css}" %>
+    <% end %>
+  </div>
+
+</div>

@@ -1,0 +1,39 @@
+<% content_for :page_title, "Sửa ghế #{@seat.label}" %>
+
+<div class="max-w-sm">
+  <div class="flex items-center gap-3 mb-6 text-sm text-gray-400">
+    <%= link_to @room.name, admin_room_path(@room), class: "hover:text-white" %>
+    <span>/</span>
+    <span class="text-gray-300">Ghế <%= @seat.label %></span>
+  </div>
+
+  <%= render "admin/shared/errors", record: @seat %>
+
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <p class="text-sm font-semibold text-white mb-1">Ghế <%= @seat.label %></p>
+    <p class="text-xs text-gray-500 mb-4">Hàng <%= @seat.row_label %>, số <%= @seat.seat_number %></p>
+
+    <%= form_with model: [:admin, @seat], local: true do |f| %>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Loại ghế</label>
+          <%= f.select :seat_type,
+                [["Standard", "standard"], ["VIP", "vip"], ["Couple", "couple"]], {},
+                class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                        focus:outline-none focus:border-yellow-500" %>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Trạng thái</label>
+          <%= f.select :status,
+                [["Có sẵn", "available"], ["Bảo trì", "maintenance"]], {},
+                class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                        focus:outline-none focus:border-yellow-500" %>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <%= f.submit "Lưu", class: "px-5 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg cursor-pointer" %>
+          <%= link_to "Huỷ", admin_room_path(@room), class: "px-5 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

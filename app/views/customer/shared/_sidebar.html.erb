@@ -1,0 +1,38 @@
+<aside class="w-full lg:w-60 shrink-0">
+  <!-- Avatar + name -->
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-4 flex items-center gap-4">
+    <div class="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center text-lg font-bold text-white shrink-0">
+      <%= current_user.name.first.upcase %>
+    </div>
+    <div class="min-w-0">
+      <p class="text-sm font-semibold text-white truncate"><%= current_user.name %></p>
+      <p class="text-xs text-gray-400 truncate"><%= current_user.email %></p>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+    <% [
+         ["Thông tin cá nhân", customer_profile_path,       "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"],
+         ["Lịch sử đặt vé",   customer_bookings_path,      "M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"],
+         ["Chỉnh sửa hồ sơ", edit_customer_profile_path,  "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"]
+       ].each do |label, path, icon_d| %>
+      <%= link_to path, class: "flex items-center gap-3 px-4 py-3 text-sm border-b border-gray-800 transition-colors #{customer_nav_active?(path)}" do %>
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<%= icon_d %>"/>
+        </svg>
+        <%= label %>
+      <% end %>
+    <% end %>
+
+    <%= link_to destroy_user_session_path,
+          data: { turbo_method: :delete },
+          class: "flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:text-red-400 hover:bg-gray-800 transition-colors" do %>
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+      </svg>
+      Đăng xuất
+    <% end %>
+  </nav>
+</aside>

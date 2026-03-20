@@ -1,0 +1,102 @@
+<% content_for :page_title, "Phim" %>
+
+<div class="flex items-center justify-between mb-5">
+  <h1 class="text-xl font-bold text-white">Quản lý phim</h1>
+  <%= link_to "＋ Thêm phim", new_admin_movie_path,
+        class: "px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg transition-colors" %>
+</div>
+
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-5">
+  <%= form_with url: admin_movies_path, method: :get, local: true, class: "flex flex-wrap gap-3 items-end" do |f| %>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Tìm kiếm</label>
+      <%= f.text_field :q, value: params[:q], placeholder: "Tên phim…",
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    placeholder-gray-600 focus:outline-none focus:border-yellow-500 w-52" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Trạng thái</label>
+      <%= f.select :status,
+            [["Tất cả", ""], ["Nháp", "draft"], ["Sắp chiếu", "upcoming"],
+             ["Đang chiếu", "now_showing"], ["Đã kết thúc", "ended"]],
+            { selected: params[:status] },
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500" %>
+    </div>
+    <%= f.submit "Lọc", class: "px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg cursor-pointer" %>
+    <% if params[:q].present? || params[:status].present? %>
+      <%= link_to "Xoá lọc", admin_movies_path, class: "px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg" %>
+    <% end %>
+  <% end %>
+</div>
+
+<div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+  <% if @movies.empty? %>
+    <div class="px-5 py-12 text-center">
+      <p class="text-gray-500 text-sm">Chưa có phim nào.</p>
+      <%= link_to "Tạo phim đầu tiên →", new_admin_movie_path, class: "text-yellow-400 hover:text-yellow-300 text-sm mt-2 inline-block" %>
+    </div>
+  <% else %>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-800 text-left">
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Phim</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Thể loại</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Thời lượng</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Khởi chiếu</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Trạng thái</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-800">
+        <% @movies.each do |movie| %>
+          <tr class="hover:bg-gray-800/40 transition-colors">
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-11 rounded bg-gray-800 shrink-0 overflow-hidden">
+                  <% if movie.poster.attached? %>
+                    <%= image_tag movie.poster, class: "w-full h-full object-cover" %>
+                  <% else %>
+                    <div class="w-full h-full flex items-center justify-center text-xs font-bold text-gray-600">
+                      <%= movie.title.first.upcase %>
+                    </div>
+                  <% end %>
+                </div>
+                <div>
+                  <p class="font-medium text-white"><%= movie.title %></p>
+                  <%= age_rating_badge(movie.age_rating) if movie.age_rating.present? %>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex flex-wrap gap-1">
+                <% movie.genres.first(3).each do |g| %>
+                  <span class="px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 text-xs"><%= g.name %></span>
+                <% end %>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-gray-300"><%= format_duration(movie.duration) %></td>
+            <td class="px-4 py-3 text-gray-400 text-xs">
+              <%= movie.release_date ? I18n.l(movie.release_date, format: :long) : "—" %>
+            </td>
+            <td class="px-4 py-3">
+              <% status_css = { "draft" => "bg-gray-600/30 text-gray-400", "upcoming" => "bg-blue-500/20 text-blue-400",
+                                 "now_showing" => "bg-green-500/20 text-green-400", "ended" => "bg-red-500/20 text-red-400" }[movie.status] %>
+              <span class="px-2 py-0.5 rounded text-xs font-medium <%= status_css %>">
+                <%= { "draft" => "Nháp", "upcoming" => "Sắp chiếu", "now_showing" => "Đang chiếu", "ended" => "Đã kết thúc" }[movie.status] %>
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex gap-2 justify-end">
+                <%= link_to "Xem", admin_movie_path(movie), class: "text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-lg" %>
+                <%= link_to "Sửa", edit_admin_movie_path(movie), class: "text-xs px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded-lg" %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <div class="px-5 py-4 border-t border-gray-800">
+      <%= pagy_tailwind_nav(@pagy) %>
+    </div>
+  <% end %>
+</div>

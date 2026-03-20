@@ -1,0 +1,66 @@
+<% content_for :page_title, "Tạo ghế – #{@room.name}" %>
+
+<div class="max-w-lg">
+  <div class="flex items-center gap-3 mb-6 text-sm text-gray-400">
+    <%= link_to @cinema.name, admin_cinema_path(@cinema), class: "hover:text-white truncate max-w-32" %>
+    <span>/</span>
+    <%= link_to @room.name, admin_room_path(@room), class: "hover:text-white" %>
+    <span>/</span>
+    <span class="text-gray-300">Tạo ghế</span>
+  </div>
+
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+    <h2 class="text-sm font-semibold text-white mb-1">Tạo ghế hàng loạt</h2>
+    <p class="text-xs text-gray-500 mb-5">Hệ thống sẽ tự tạo ghế theo cấu hình bên dưới. Ghế trùng sẽ được bỏ qua.</p>
+
+    <%= form_with url: generate_admin_room_seats_path(@room), method: :post, local: true do %>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Hàng ghế <span class="text-red-400">*</span></label>
+          <%= text_field_tag :rows, nil, placeholder: "A,B,C hoặc A B C",
+                class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                        focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500" %>
+          <p class="text-xs text-gray-600 mt-1">Nhập các chữ cái hàng, cách nhau bằng dấu phẩy hoặc khoảng trắng. VD: A,B,C,D</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Số ghế / hàng <span class="text-red-400">*</span></label>
+            <%= number_field_tag :seats_per_row, 10, min: 1, max: 50,
+                  class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                          focus:outline-none focus:border-yellow-500" %>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Số bắt đầu</label>
+            <%= number_field_tag :start_number, 1, min: 1,
+                  class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                          focus:outline-none focus:border-yellow-500" %>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Loại ghế</label>
+          <%= select_tag :seat_type,
+                options_for_select([["Standard", "standard"], ["VIP", "vip"], ["Couple", "couple"]], "standard"),
+                class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                        focus:outline-none focus:border-yellow-500" %>
+        </div>
+
+        <%# Preview calculation %>
+        <div class="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3">
+          <p class="text-xs text-gray-400">
+            Ví dụ: Hàng "A,B,C" × 10 ghế/hàng = <span class="text-white font-medium">30 ghế</span>
+            (A1–A10, B1–B10, C1–C10)
+          </p>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <%= submit_tag "Tạo ghế",
+                class: "px-5 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg cursor-pointer transition-colors" %>
+          <%= link_to "Huỷ", admin_room_path(@room),
+                class: "px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg transition-colors" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

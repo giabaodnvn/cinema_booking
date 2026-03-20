@@ -1,0 +1,94 @@
+<% content_for :page_title, "#{@room.name} – #{@cinema.name}" %>
+
+<div class="max-w-5xl">
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3 text-sm text-gray-400">
+      <%= link_to @cinema.name, admin_cinema_path(@cinema), class: "hover:text-white truncate max-w-40" %>
+      <span>/</span>
+      <span class="text-gray-300"><%= @room.name %></span>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "＋ Tạo ghế", generate_form_admin_room_seats_path(@room),
+            class: "px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg transition-colors" %>
+      <%= link_to "Sửa phòng", edit_admin_room_path(@room),
+            class: "px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg transition-colors" %>
+    </div>
+  </div>
+
+  <%# Room info %>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-5">
+    <div class="grid grid-cols-3 gap-4 text-sm">
+      <div><p class="text-xs text-gray-500 mb-0.5">Loại phòng</p><p class="text-white"><%= room_type_label(@room.room_type) %></p></div>
+      <div><p class="text-xs text-gray-500 mb-0.5">Sức chứa</p><p class="text-white"><%= @room.capacity %></p></div>
+      <div><p class="text-xs text-gray-500 mb-0.5">Ghế đã tạo</p><p class="text-white"><%= @room.seats.count %></p></div>
+    </div>
+  </div>
+
+  <%# Seat map preview %>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl">
+    <div class="px-5 py-4 border-b border-gray-800">
+      <p class="text-sm font-semibold text-white">Sơ đồ ghế</p>
+    </div>
+
+    <% if @seats_by_row.empty? %>
+      <div class="px-5 py-12 text-center">
+        <p class="text-gray-500 text-sm mb-3">Phòng chưa có ghế nào.</p>
+        <%= link_to "＋ Tạo ghế hàng loạt", generate_form_admin_room_seats_path(@room),
+              class: "px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg transition-colors" %>
+      </div>
+    <% else %>
+      <div class="px-5 py-5 overflow-x-auto">
+        <%# Screen %>
+        <div class="mb-5 text-center">
+          <div class="h-1.5 bg-gradient-to-b from-gray-400 to-gray-700 rounded-t-full mx-12 opacity-50"></div>
+          <p class="text-xs text-gray-600 uppercase tracking-widest mt-1">Màn hình</p>
+        </div>
+
+        <div class="space-y-1.5">
+          <% @seats_by_row.each do |row, seats| %>
+            <div class="flex items-center gap-1.5 min-w-max mx-auto">
+              <span class="w-5 text-center text-xs font-bold text-gray-600"><%= row %></span>
+              <div class="flex gap-1">
+                <% seats.each do |seat| %>
+                  <% seat_css = if seat.maintenance?
+                                   "bg-red-900/30 border-red-700/40 text-red-500"
+                                 elsif seat.vip?
+                                   "bg-yellow-900/30 border-yellow-700/40 text-yellow-500"
+                                 elsif seat.couple?
+                                   "bg-pink-900/30 border-pink-700/40 text-pink-500"
+                                 else
+                                   "bg-gray-800 border-gray-700 text-gray-400"
+                                 end %>
+                  <div class="group relative">
+                    <div class="<%= seat.couple? ? 'w-9' : 'w-7' %> h-7 rounded text-xs font-bold border
+                                flex items-center justify-center <%= seat_css %>">
+                      <%= seat.seat_number %>
+                    </div>
+                    <%# Tooltip with edit/delete on hover %>
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:flex
+                                bg-gray-800 border border-gray-700 rounded-lg p-1 gap-1 z-10 whitespace-nowrap shadow-xl">
+                      <%= link_to "✏", edit_admin_seat_path(seat),
+                            class: "text-xs px-1.5 py-0.5 text-yellow-400 hover:bg-yellow-500/20 rounded" %>
+                      <%= link_to "✕", admin_seat_path(seat),
+                            data: { turbo_method: :delete, turbo_confirm: "Xoá ghế #{seat.label}?" },
+                            class: "text-xs px-1.5 py-0.5 text-red-400 hover:bg-red-600/20 rounded" %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+              <span class="w-5 text-center text-xs font-bold text-gray-600"><%= row %></span>
+            </div>
+          <% end %>
+        </div>
+
+        <%# Legend %>
+        <div class="flex flex-wrap items-center gap-4 mt-5 pt-4 border-t border-gray-800 text-xs text-gray-500">
+          <span class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-gray-800 border border-gray-700 inline-block"></span> Standard</span>
+          <span class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-yellow-900/30 border border-yellow-700/40 inline-block"></span> VIP</span>
+          <span class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-pink-900/30 border border-pink-700/40 inline-block"></span> Couple</span>
+          <span class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-red-900/30 border border-red-700/40 inline-block"></span> Bảo trì</span>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,49 @@
+source "https://rubygems.org"
+
+gem "rails", "~> 7.2.0"
+gem "sprockets-rails"
+gem "mysql2", "~> 0.5"
+gem "puma", ">= 5.0"
+gem "importmap-rails"
+gem "turbo-rails"
+gem "stimulus-rails"
+gem "jbuilder"
+gem "tzinfo-data", platforms: %i[ windows jruby ]
+gem "bootsnap", require: false
+
+# Auth & Authorization
+gem "devise"
+gem "pundit"
+
+# UI
+gem "tailwindcss-rails"
+gem 'pagy', '< 9.0'
+
+# Admin helpers
+gem "chartkick"
+gem "groupdate"
+
+# Background jobs
+gem "sidekiq"
+gem "redis", ">= 4.0.1"
+
+# Security
+gem "rack-attack"
+
+group :development, :test do
+  gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+  gem "brakeman", require: false
+  gem "rubocop-rails-omakase", require: false
+  gem "rspec-rails"
+  gem "factory_bot_rails"
+  gem "faker"
+  gem "dotenv-rails"
+end
+
+group :development do
+  gem "web-console"
+end
+
+group :test do
+  gem "shoulda-matchers"
+end

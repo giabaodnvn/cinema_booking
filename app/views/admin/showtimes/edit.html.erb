@@ -1,0 +1,21 @@
+<% content_for :page_title, "Sửa suất chiếu" %>
+<div class="max-w-2xl">
+  <div class="flex items-center gap-3 mb-6 text-sm text-gray-400">
+    <%= link_to @showtime.movie.title, admin_movie_path(@showtime.movie), class: "hover:text-white truncate max-w-40" %>
+    <span>/</span>
+    <span class="text-gray-300">Sửa suất chiếu</span>
+  </div>
+  <%= render "admin/shared/errors", record: @showtime %>
+  <%= form_with model: [:admin, @showtime], local: true do |f| %>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-5">
+      <%= render "form", f: f %>
+    </div>
+    <div class="flex gap-3">
+      <%= f.submit "Lưu thay đổi", class: "px-5 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg cursor-pointer transition-colors" %>
+      <%= link_to "Huỷ", admin_showtime_path(@showtime), class: "px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg transition-colors" %>
+      <%= link_to "Xoá", admin_showtime_path(@showtime),
+            data: { turbo_method: :delete, turbo_confirm: "Xoá suất chiếu này?" },
+            class: "ml-auto px-4 py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-sm rounded-lg border border-red-600/30 transition-colors" %>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,92 @@
+<% content_for :title, "Đặt vé mới – Staff Counter" %>
+
+<div class="max-w-4xl">
+  <div class="flex items-center gap-3 mb-6">
+    <%= link_to "← Quay lại", staff_bookings_path, class: "text-sm text-gray-400 hover:text-white transition-colors" %>
+    <span class="text-gray-700">/</span>
+    <h1 class="text-lg font-bold text-white">Bước 1 – Chọn suất chiếu</h1>
+  </div>
+
+  <%# ── SEARCH FORM ── %>
+  <%= form_with url: new_staff_booking_path, method: :get, local: true,
+        class: "bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6" do |f| %>
+    <p class="text-sm font-semibold text-gray-300 mb-4">Tìm suất chiếu</p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div>
+        <%= f.text_field :q, value: params[:q], placeholder: "Tên phim…",
+              class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                      placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" %>
+      </div>
+      <div>
+        <%= f.date_field :date, value: params[:date].presence || Date.current.to_s,
+              class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                      focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" %>
+      </div>
+      <div>
+        <%= f.submit "Tìm kiếm",
+              class: "w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm
+                      font-semibold rounded-lg transition-colors cursor-pointer" %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# ── SEARCH RESULTS ── %>
+  <% if @showtimes %>
+    <% if @showtimes.empty? %>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl px-5 py-10 text-center">
+        <p class="text-gray-500 text-sm">Không tìm thấy suất chiếu phù hợp.</p>
+        <p class="text-gray-600 text-xs mt-1">Thử thay đổi ngày hoặc tên phim.</p>
+      </div>
+    <% else %>
+      <div class="space-y-3">
+        <p class="text-xs text-gray-500 mb-2"><%= @showtimes.count %> suất chiếu tìm thấy</p>
+
+        <% @showtimes.each do |showtime| %>
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-4
+                      hover:border-blue-700 transition-colors">
+
+            <%# Poster thumbnail %>
+            <div class="w-10 h-14 rounded-lg bg-gray-800 shrink-0 overflow-hidden">
+              <% if showtime.movie.poster.attached? %>
+                <%= image_tag showtime.movie.poster, class: "w-full h-full object-cover" %>
+              <% else %>
+                <div class="w-full h-full flex items-center justify-center text-xs font-bold text-gray-600">
+                  <%= showtime.movie.title.first.upcase %>
+                </div>
+              <% end %>
+            </div>
+
+            <%# Info %>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-white truncate"><%= showtime.movie.title %></p>
+              <p class="text-xs text-gray-400 mt-0.5">
+                <%= showtime.room.cinema.name %>
+                &bull; Phòng <%= showtime.room.name %>
+                &bull; <%= room_type_label(showtime.room.room_type) %>
+              </p>
+              <p class="text-xs text-gray-300 mt-1 font-medium">
+                <%= I18n.l(showtime.start_time, format: :short) %>
+                – <%= I18n.l(showtime.end_time, format: :time) %>
+              </p>
+            </div>
+
+            <%# Price + action %>
+            <div class="shrink-0 text-right">
+              <p class="text-sm font-bold text-white"><%= format_price(showtime.price) %><span class="text-xs text-gray-500 font-normal">/ghế</span></p>
+              <%= link_to "Chọn ghế →",
+                    seats_staff_bookings_path(showtime_id: showtime.id),
+                    class: "mt-2 inline-block px-4 py-1.5 bg-blue-600 hover:bg-blue-700
+                            text-white text-xs font-semibold rounded-lg transition-colors" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  <% else %>
+    <%# Initial state – no search yet %>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl px-5 py-10 text-center">
+      <p class="text-gray-400 text-sm">Nhập tên phim hoặc chọn ngày để tìm suất chiếu.</p>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,97 @@
+<% content_for :title, "Quản lý vé – Staff Counter" %>
+
+<%# ── HEADER + QUICK STATS ── %>
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-xl font-bold text-white">Đặt vé tại quầy</h1>
+    <p class="text-sm text-gray-400 mt-0.5">Hôm nay: <%= Date.current.strftime("%d/%m/%Y") %></p>
+  </div>
+  <%= link_to "＋ Đặt vé mới", new_staff_booking_path,
+        class: "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors" %>
+</div>
+
+<%# Stats row %>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+  <div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-4">
+    <p class="text-xs text-gray-500">Vé hôm nay</p>
+    <p class="text-2xl font-bold text-white mt-1"><%= @today_count %></p>
+  </div>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-4">
+    <p class="text-xs text-gray-500">Doanh thu (đã thu)</p>
+    <p class="text-2xl font-bold text-green-400 mt-1"><%= format_price(@today_revenue) %></p>
+  </div>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-4 col-span-2 sm:col-span-1">
+    <p class="text-xs text-gray-500">Nhân viên</p>
+    <p class="text-base font-semibold text-white mt-1"><%= current_user.name %></p>
+    <p class="text-xs text-gray-400"><%= current_user.role.capitalize %></p>
+  </div>
+</div>
+
+<%# ── BOOKING LIST ── %>
+<div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+    <h2 class="text-sm font-semibold text-white">Vé tại quầy gần đây</h2>
+  </div>
+
+  <% if @bookings.empty? %>
+    <div class="px-5 py-12 text-center">
+      <p class="text-gray-500 text-sm">Chưa có đơn đặt vé tại quầy nào.</p>
+      <%= link_to "Đặt vé đầu tiên →", new_staff_booking_path, class: "text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block" %>
+    </div>
+  <% else %>
+    <div class="divide-y divide-gray-800">
+      <% @bookings.each do |booking| %>
+        <% showtime = booking.showtime %>
+        <div class="px-5 py-4 flex items-center justify-between gap-4 hover:bg-gray-800/50 transition-colors">
+          <div class="flex items-center gap-4 min-w-0">
+            <%# Booking code %>
+            <div class="shrink-0">
+              <p class="font-mono text-sm font-bold text-white"><%= booking.booking_code %></p>
+              <p class="text-xs text-gray-500 mt-0.5"><%= I18n.l(booking.created_at, format: :short) %></p>
+            </div>
+
+            <%# Movie + showtime info %>
+            <div class="min-w-0">
+              <p class="text-sm text-white font-medium truncate"><%= showtime.movie.title %></p>
+              <p class="text-xs text-gray-400 mt-0.5">
+                <%= showtime.room.cinema.name %> &bull;
+                <%= I18n.l(showtime.start_time, format: :time) %> &bull;
+                <%= booking.booking_seats.size %> ghế
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4 shrink-0">
+            <%# Customer %>
+            <div class="hidden sm:block text-right">
+              <p class="text-xs text-gray-300"><%= booking.customer_display_name %></p>
+              <p class="text-xs text-gray-500"><%= booking.customer_display_phone.presence || "—" %></p>
+            </div>
+
+            <%# Payment status %>
+            <% if booking.payment %>
+              <% paid = booking.payment.completed? %>
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium border
+                           <%= paid ? 'bg-green-500/20 text-green-400 border-green-500/40' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40' %>">
+                <%= paid ? "Đã thu" : "Chưa thu" %>
+              </span>
+            <% end %>
+
+            <%# Total %>
+            <p class="text-sm font-bold text-white w-24 text-right"><%= format_price(booking.total_amount) %></p>
+
+            <%= link_to "Xem", staff_booking_path(booking),
+                  class: "text-xs px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-colors" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Pagination %>
+    <% if @pagy&.pages.to_i > 1 %>
+      <div class="px-5 py-4 border-t border-gray-800">
+        <%= pagy_tailwind_nav(@pagy) %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

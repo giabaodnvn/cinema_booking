@@ -1,0 +1,90 @@
+<% content_for :page_title, "Suất chiếu" %>
+
+<div class="flex items-center justify-between mb-5">
+  <h1 class="text-xl font-bold text-white">Quản lý suất chiếu</h1>
+</div>
+
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-5">
+  <%= form_with url: admin_showtimes_path, method: :get, local: true, class: "flex flex-wrap gap-3 items-end" do |f| %>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Phim</label>
+      <%= f.select :movie_id,
+            [["Tất cả", ""]] + @movies.map { |m| [m.title, m.id] },
+            { selected: params[:movie_id] },
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500 max-w-48" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Rạp</label>
+      <%= f.select :cinema_id,
+            [["Tất cả", ""]] + @cinemas.map { |c| [c.name, c.id] },
+            { selected: params[:cinema_id] },
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Ngày</label>
+      <%= f.date_field :date, value: params[:date],
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Trạng thái</label>
+      <%= f.select :status,
+            [["Tất cả", ""], ["Lịch chiếu", "scheduled"], ["Đã huỷ", "cancelled"], ["Hoàn thành", "finished"]],
+            { selected: params[:status] },
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500" %>
+    </div>
+    <%= f.submit "Lọc", class: "px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg cursor-pointer" %>
+    <% if [params[:movie_id], params[:cinema_id], params[:date], params[:status]].any?(&:present?) %>
+      <%= link_to "Xoá lọc", admin_showtimes_path, class: "px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg" %>
+    <% end %>
+  <% end %>
+</div>
+
+<div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+  <% if @showtimes.empty? %>
+    <div class="px-5 py-12 text-center text-gray-500 text-sm">Không tìm thấy suất chiếu nào.</div>
+  <% else %>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-800 text-left">
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Phim</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Rạp / Phòng</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Thời gian</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Giá vé</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Trạng thái</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-800">
+        <% @showtimes.each do |st| %>
+          <tr class="hover:bg-gray-800/40 transition-colors">
+            <td class="px-4 py-3 font-medium text-white max-w-40 truncate"><%= st.movie.title %></td>
+            <td class="px-4 py-3">
+              <p class="text-gray-300"><%= st.room.cinema.name %></p>
+              <p class="text-xs text-gray-500 mt-0.5"><%= st.room.name %> – <%= room_type_label(st.room.room_type) %></p>
+            </td>
+            <td class="px-4 py-3">
+              <p class="text-gray-300 text-xs"><%= I18n.l(st.start_time, format: :short) %></p>
+              <p class="text-xs text-gray-500">– <%= I18n.l(st.end_time, format: :time) %></p>
+            </td>
+            <td class="px-4 py-3 text-gray-300"><%= format_price(st.price) %></td>
+            <td class="px-4 py-3">
+              <% st_css = { "scheduled" => "bg-green-500/20 text-green-400", "cancelled" => "bg-red-500/20 text-red-400", "finished" => "bg-gray-600/30 text-gray-400" }[st.status] %>
+              <span class="px-2 py-0.5 rounded text-xs font-medium <%= st_css %>">
+                <%= { "scheduled" => "Lịch chiếu", "cancelled" => "Đã huỷ", "finished" => "Hoàn thành" }[st.status] %>
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex gap-2 justify-end">
+                <%= link_to "Xem", admin_showtime_path(st), class: "text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg" %>
+                <%= link_to "Sửa", edit_admin_showtime_path(st), class: "text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-lg" %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <div class="px-5 py-4 border-t border-gray-800">
+      <%= pagy_tailwind_nav(@pagy) %>
+    </div>
+  <% end %>
+</div>

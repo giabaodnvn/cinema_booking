@@ -1,0 +1,150 @@
+<% content_for :title, "Quản lý đặt vé – Admin" %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-bold text-white">Quản lý đặt vé</h1>
+</div>
+
+<%# ── STATS ── %>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+  <% [
+       ["Tổng đơn", @total_count,   "text-white"],
+       ["Trực tuyến", @online_count,  "text-purple-400"],
+       ["Tại quầy", @offline_count, "text-blue-400"],
+       ["Doanh thu hôm nay", format_price(@today_revenue), "text-green-400"]
+     ].each do |label, value, color_class| %>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-4">
+      <p class="text-xs text-gray-500"><%= label %></p>
+      <p class="text-xl font-bold <%= color_class %> mt-1"><%= value %></p>
+    </div>
+  <% end %>
+</div>
+
+<%# ── FILTERS ── %>
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-5">
+  <%= form_with url: admin_bookings_path, method: :get, local: true,
+        class: "flex flex-wrap gap-3 items-end" do |f| %>
+
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Tìm kiếm</label>
+      <%= f.text_field :q, value: params[:q], placeholder: "Mã vé, tên, email…",
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    placeholder-gray-600 focus:outline-none focus:border-blue-500 w-52" %>
+    </div>
+
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Loại đặt vé</label>
+      <%= f.select :booking_type,
+            [["Tất cả", ""], ["Trực tuyến", "online"], ["Tại quầy", "offline"]],
+            { selected: params[:booking_type] },
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-blue-500" %>
+    </div>
+
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Trạng thái</label>
+      <%= f.select :status,
+            [["Tất cả", ""], ["Chờ thanh toán", "pending"], ["Đã thanh toán", "paid"], ["Đã huỷ", "cancelled"]],
+            { selected: params[:status] },
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-blue-500" %>
+    </div>
+
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Ngày</label>
+      <%= f.date_field :date, value: params[:date],
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    focus:outline-none focus:border-blue-500" %>
+    </div>
+
+    <%= f.submit "Lọc",
+          class: "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold
+                  rounded-lg transition-colors cursor-pointer" %>
+
+    <% if [ params[:q], params[:booking_type], params[:status], params[:date] ].any?(&:present?) %>
+      <%= link_to "Xoá lọc", admin_bookings_path,
+            class: "px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg transition-colors" %>
+    <% end %>
+  <% end %>
+</div>
+
+<%# ── BOOKING TABLE ── %>
+<div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+  <% if @bookings.empty? %>
+    <div class="px-5 py-12 text-center">
+      <p class="text-gray-500 text-sm">Không tìm thấy đơn vé nào.</p>
+    </div>
+  <% else %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-800 text-left">
+            <th class="px-4 py-3 text-xs text-gray-500 font-medium">Mã vé</th>
+            <th class="px-4 py-3 text-xs text-gray-500 font-medium">Phim / Suất</th>
+            <th class="px-4 py-3 text-xs text-gray-500 font-medium">Khách hàng</th>
+            <th class="px-4 py-3 text-xs text-gray-500 font-medium">Loại</th>
+            <th class="px-4 py-3 text-xs text-gray-500 font-medium">Ghế</th>
+            <th class="px-4 py-3 text-xs text-gray-500 font-medium">Thanh toán</th>
+            <th class="px-4 py-3 text-xs text-gray-500 font-medium text-right">Tổng</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-800">
+          <% @bookings.each do |booking| %>
+            <tr class="hover:bg-gray-800/40 transition-colors">
+              <td class="px-4 py-3">
+                <p class="font-mono font-bold text-white text-xs"><%= booking.booking_code %></p>
+                <p class="text-xs text-gray-500 mt-0.5"><%= I18n.l(booking.created_at, format: :short) %></p>
+              </td>
+
+              <td class="px-4 py-3">
+                <p class="text-white font-medium truncate max-w-44"><%= booking.showtime.movie.title %></p>
+                <p class="text-xs text-gray-400 mt-0.5">
+                  <%= booking.showtime.room.cinema.name %>
+                  &bull; <%= I18n.l(booking.showtime.start_time, format: :time) %>
+                </p>
+              </td>
+
+              <td class="px-4 py-3">
+                <p class="text-gray-300"><%= booking.customer_display_name %></p>
+                <p class="text-xs text-gray-500 mt-0.5">
+                  <%= booking.user&.email || booking.customer_display_phone || "—" %>
+                </p>
+              </td>
+
+              <td class="px-4 py-3">
+                <span class="px-1.5 py-0.5 rounded text-xs font-medium
+                             <%= booking.offline? ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400' %>">
+                  <%= booking_type_label(booking.booking_type) %>
+                </span>
+              </td>
+
+              <td class="px-4 py-3 text-gray-300 text-center">
+                <%= booking.booking_seats.size %>
+              </td>
+
+              <td class="px-4 py-3">
+                <%= booking_status_badge(booking.status) %>
+              </td>
+
+              <td class="px-4 py-3 text-right font-bold text-white">
+                <%= format_price(booking.total_amount) %>
+              </td>
+
+              <td class="px-4 py-3">
+                <%= link_to "Xem", admin_booking_path(booking),
+                      class: "text-xs px-3 py-1 rounded-lg bg-gray-700 hover:bg-gray-600
+                              text-gray-300 hover:text-white transition-colors" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @pagy&.pages.to_i > 1 %>
+      <div class="px-5 py-4 border-t border-gray-800">
+        <%= pagy_tailwind_nav(@pagy) %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

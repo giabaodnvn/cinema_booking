@@ -1,0 +1,71 @@
+<% content_for :page_title, "Rạp chiếu phim" %>
+
+<div class="flex items-center justify-between mb-5">
+  <h1 class="text-xl font-bold text-white">Quản lý rạp chiếu</h1>
+  <%= link_to "＋ Thêm rạp", new_admin_cinema_path,
+        class: "px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg transition-colors" %>
+</div>
+
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-5">
+  <%= form_with url: admin_cinemas_path, method: :get, local: true, class: "flex flex-wrap gap-3 items-end" do |f| %>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Tìm kiếm</label>
+      <%= f.text_field :q, value: params[:q], placeholder: "Tên, thành phố…",
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                    placeholder-gray-600 focus:outline-none focus:border-yellow-500 w-52" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Trạng thái</label>
+      <%= f.select :status, [["Tất cả", ""], ["Hoạt động", "active"], ["Tạm dừng", "inactive"]],
+            { selected: params[:status] },
+            class: "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500" %>
+    </div>
+    <%= f.submit "Lọc", class: "px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg cursor-pointer" %>
+  <% end %>
+</div>
+
+<div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+  <% if @cinemas.empty? %>
+    <div class="px-5 py-12 text-center">
+      <p class="text-gray-500 text-sm">Chưa có rạp chiếu nào.</p>
+      <%= link_to "Thêm rạp đầu tiên →", new_admin_cinema_path, class: "text-yellow-400 text-sm mt-2 inline-block" %>
+    </div>
+  <% else %>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-800 text-left">
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Tên rạp</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Thành phố</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Địa chỉ</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium text-center">Phòng</th>
+          <th class="px-4 py-3 text-xs text-gray-500 font-medium">Trạng thái</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-800">
+        <% @cinemas.each do |cinema| %>
+          <tr class="hover:bg-gray-800/40 transition-colors">
+            <td class="px-4 py-3 font-medium text-white"><%= cinema.name %></td>
+            <td class="px-4 py-3 text-gray-300"><%= cinema.city %></td>
+            <td class="px-4 py-3 text-gray-400 text-xs max-w-48 truncate"><%= cinema.address %></td>
+            <td class="px-4 py-3 text-center text-gray-300"><%= cinema.rooms.count %></td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded text-xs font-medium <%= cinema.active? ? 'bg-green-500/20 text-green-400' : 'bg-gray-600/30 text-gray-400' %>">
+                <%= cinema.active? ? "Hoạt động" : "Tạm dừng" %>
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex gap-2 justify-end">
+                <%= link_to "Xem", admin_cinema_path(cinema), class: "text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-lg" %>
+                <%= link_to "Sửa", edit_admin_cinema_path(cinema), class: "text-xs px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded-lg" %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <div class="px-5 py-4 border-t border-gray-800">
+      <%= pagy_tailwind_nav(@pagy) %>
+    </div>
+  <% end %>
+</div>

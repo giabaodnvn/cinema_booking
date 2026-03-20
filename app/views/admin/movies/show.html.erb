@@ -1,0 +1,119 @@
+<% content_for :page_title, @movie.title %>
+
+<div class="max-w-5xl">
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3 text-sm text-gray-400">
+      <%= link_to "← Phim", admin_movies_path, class: "hover:text-white" %>
+      <span>/</span>
+      <span class="text-gray-300 truncate max-w-64"><%= @movie.title %></span>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "Sửa", edit_admin_movie_path(@movie),
+            class: "px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 text-sm font-medium rounded-lg transition-colors" %>
+      <%= link_to "Xoá", admin_movie_path(@movie),
+            data: { turbo_method: :delete, turbo_confirm: "Xoá phim '#{@movie.title}'?" },
+            class: "px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-sm rounded-lg border border-red-600/30 transition-colors" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-5">
+
+      <%# Movie header %>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex gap-5">
+        <div class="w-24 shrink-0">
+          <% if @movie.poster.attached? %>
+            <%= image_tag @movie.poster, class: "w-full aspect-[2/3] object-cover rounded-xl" %>
+          <% else %>
+            <div class="w-full aspect-[2/3] bg-gray-800 rounded-xl flex items-center justify-center text-2xl font-bold text-gray-600">
+              <%= @movie.title.first.upcase %>
+            </div>
+          <% end %>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-xl font-bold text-white mb-2"><%= @movie.title %></p>
+          <div class="flex flex-wrap gap-2 mb-3">
+            <%= age_rating_badge(@movie.age_rating) if @movie.age_rating.present? %>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300 text-xs"><%= format_duration(@movie.duration) %></span>
+            <% @movie.genres.each do |g| %>
+              <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300 text-xs"><%= g.name %></span>
+            <% end %>
+          </div>
+          <% status_css = { "draft" => "bg-gray-600/30 text-gray-400", "upcoming" => "bg-blue-500/20 text-blue-400",
+                             "now_showing" => "bg-green-500/20 text-green-400", "ended" => "bg-red-500/20 text-red-400" }[@movie.status] %>
+          <span class="px-2 py-1 rounded text-xs font-medium <%= status_css %>">
+            <%= { "draft" => "Nháp", "upcoming" => "Sắp chiếu", "now_showing" => "Đang chiếu", "ended" => "Đã kết thúc" }[@movie.status] %>
+          </span>
+          <% if @movie.release_date %>
+            <p class="text-xs text-gray-400 mt-2">Khởi chiếu: <%= I18n.l(@movie.release_date, format: :long) %></p>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Description %>
+      <% if @movie.description.present? %>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Nội dung</p>
+          <p class="text-sm text-gray-300 leading-relaxed"><%= @movie.description %></p>
+        </div>
+      <% end %>
+
+      <%# Trailer %>
+      <% if @movie.trailer_url.present? && (embed_url = youtube_embed_url(@movie.trailer_url)) %>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <p class="text-xs text-gray-500 uppercase tracking-wide mb-3">Trailer</p>
+          <div class="aspect-video rounded-lg overflow-hidden">
+            <iframe src="<%= embed_url %>" class="w-full h-full" allowfullscreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+            </iframe>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Showtimes %>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl">
+        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+          <p class="text-sm font-semibold text-white">Suất chiếu (<%= @showtimes.count %>)</p>
+          <%= link_to "＋ Thêm suất", new_admin_movie_showtime_path(@movie),
+                class: "text-xs px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded-lg transition-colors" %>
+        </div>
+        <% if @showtimes.empty? %>
+          <div class="px-5 py-8 text-center text-gray-600 text-sm">Chưa có suất chiếu nào.</div>
+        <% else %>
+          <div class="divide-y divide-gray-800">
+            <% @showtimes.first(10).each do |st| %>
+              <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-800/30 transition-colors">
+                <div>
+                  <p class="text-sm text-gray-300"><%= st.room.cinema.name %> – Phòng <%= st.room.name %></p>
+                  <p class="text-xs text-gray-500 mt-0.5">
+                    <%= I18n.l(st.start_time, format: :short) %>
+                    – <%= I18n.l(st.end_time, format: :time) %>
+                    &bull; <%= format_price(st.price) %>
+                  </p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <% st_css = { "scheduled" => "text-green-400", "cancelled" => "text-red-400", "finished" => "text-gray-500" }[st.status] %>
+                  <span class="text-xs <%= st_css %>"><%= { "scheduled" => "Lịch chiếu", "cancelled" => "Đã huỷ", "finished" => "Hoàn thành" }[st.status] %></span>
+                  <%= link_to "Sửa", edit_admin_showtime_path(st), class: "text-xs text-yellow-400 hover:text-yellow-300" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <p class="text-xs text-gray-500 uppercase tracking-wide mb-3">Hành động</p>
+        <%= link_to "Sửa thông tin", edit_admin_movie_path(@movie),
+              class: "block w-full text-center py-2 text-sm bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold rounded-lg mb-2 transition-colors" %>
+        <%= link_to "＋ Thêm suất chiếu", new_admin_movie_showtime_path(@movie),
+              class: "block w-full text-center py-2 text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg mb-2 transition-colors" %>
+        <%= link_to "Xoá phim", admin_movie_path(@movie),
+              data: { turbo_method: :delete, turbo_confirm: "Xoá phim '#{@movie.title}'? Hành động không thể hoàn tác." },
+              class: "block w-full text-center py-2 text-sm bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-600/30 rounded-lg transition-colors" %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,56 @@
+<% content_for :page_title, "Sửa người dùng" %>
+
+<div class="max-w-lg">
+  <div class="flex items-center gap-3 mb-6">
+    <%= link_to "← #{@user.name}", admin_user_path(@user), class: "text-sm text-gray-400 hover:text-white" %>
+    <span class="text-gray-700">/</span>
+    <span class="text-sm text-gray-300">Chỉnh sửa</span>
+  </div>
+
+  <%= render "admin/shared/errors", record: @user %>
+
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+    <h2 class="text-sm font-semibold text-white mb-5">Thông tin người dùng</h2>
+
+    <%= form_with model: [:admin, @user], local: true do |f| %>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Tên</label>
+          <%= f.text_field :name,
+                class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                        focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500" %>
+        </div>
+
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Email <span class="text-gray-600">(read-only)</span></label>
+          <input type="email" value="<%= @user.email %>" disabled
+                 class="w-full bg-gray-800/50 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-500 cursor-not-allowed" />
+        </div>
+
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">SĐT</label>
+          <%= f.telephone_field :phone,
+                class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                        focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500" %>
+        </div>
+
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Vai trò</label>
+          <%= f.select :role,
+                [["Khách hàng", "customer"], ["Nhân viên", "staff"], ["Admin", "admin"]],
+                {},
+                class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                        focus:outline-none focus:border-yellow-500" %>
+          <p class="text-xs text-gray-600 mt-1">Thay đổi vai trò sẽ thay đổi quyền truy cập ngay lập tức.</p>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <%= f.submit "Lưu thay đổi",
+                class: "px-5 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-lg cursor-pointer transition-colors" %>
+          <%= link_to "Huỷ", admin_user_path(@user),
+                class: "px-5 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg transition-colors" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

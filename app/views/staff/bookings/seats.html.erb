@@ -1,0 +1,231 @@
+<% content_for :title, "Chọn ghế – #{@showtime.movie.title}" %>
+
+<div class="max-w-6xl">
+
+  <%# ── BREADCRUMB ── %>
+  <div class="flex items-center gap-2 text-sm text-gray-400 mb-5">
+    <%= link_to "Đặt vé", new_staff_booking_path, class: "hover:text-white transition-colors" %>
+    <span>/</span>
+    <span class="text-gray-300">Tìm kiếm</span>
+    <span>/</span>
+    <span class="text-white">Chọn ghế</span>
+  </div>
+
+  <%# ── SHOWTIME BANNER ── %>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
+    <div class="flex items-center gap-4 flex-1 min-w-0">
+      <div class="w-10 h-14 rounded-lg bg-gray-800 shrink-0 overflow-hidden">
+        <% if @showtime.movie.poster.attached? %>
+          <%= image_tag @showtime.movie.poster, class: "w-full h-full object-cover" %>
+        <% else %>
+          <div class="w-full h-full flex items-center justify-center text-sm font-bold text-gray-500">
+            <%= @showtime.movie.title.first.upcase %>
+          </div>
+        <% end %>
+      </div>
+      <div class="min-w-0">
+        <p class="text-base font-bold text-white truncate"><%= @showtime.movie.title %></p>
+        <p class="text-sm text-gray-400 mt-0.5">
+          <%= @showtime.room.cinema.name %>
+          &bull; Phòng <%= @showtime.room.name %>
+          &bull; <%= room_type_label(@showtime.room.room_type) %>
+          &bull; <%= I18n.l(@showtime.start_time, format: :short) %>
+        </p>
+      </div>
+    </div>
+    <div class="text-right shrink-0">
+      <p class="text-xs text-gray-500">Giá vé / ghế</p>
+      <p class="text-lg font-bold text-blue-400"><%= format_price(@showtime.price) %></p>
+    </div>
+  </div>
+
+  <%# ── SEAT MAP + BOOKING FORM (Stimulus) ── %>
+  <div data-controller="seat-map"
+       data-seat-map-price-value="<%= @showtime.price.to_f %>"
+       data-seat-map-max-seats-value="8">
+
+    <div class="flex flex-col xl:flex-row gap-6">
+
+      <%# ── LEFT: SEAT MAP ── %>
+      <div class="flex-1 min-w-0">
+
+        <%# Screen indicator %>
+        <div class="mb-6 relative">
+          <div class="h-2 bg-gradient-to-b from-gray-400 to-gray-700 rounded-t-full mx-8 opacity-60"></div>
+          <p class="text-center text-xs text-gray-500 uppercase tracking-widest mt-1.5">Màn hình</p>
+        </div>
+
+        <%# Legend %>
+        <div class="flex items-center justify-center gap-5 mb-5 text-xs text-gray-400">
+          <span class="flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded bg-gray-700 border border-gray-600 inline-block"></span> Còn trống
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded bg-blue-600 inline-block"></span> Đang chọn
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded bg-gray-800 border border-gray-700 opacity-50 inline-block"></span> Đã đặt
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded bg-yellow-700/50 border border-yellow-600/50 inline-block"></span> VIP
+          </span>
+        </div>
+
+        <%# Seat rows %>
+        <div class="space-y-2 overflow-x-auto pb-2">
+          <% @seats_by_row.each do |row, seats| %>
+            <div class="flex items-center gap-2 min-w-max mx-auto">
+              <span class="w-6 text-center text-xs font-bold text-gray-500 shrink-0"><%= row %></span>
+              <div class="flex gap-1.5">
+                <% seats.each do |seat| %>
+                  <% booked    = @booked_seat_ids.include?(seat.id) %>
+                  <% is_vip    = seat.vip? %>
+                  <% is_couple = seat.couple? %>
+
+                  <button
+                    type="button"
+                    data-action="click->seat-map#toggle"
+                    data-seat-map-target="seat"
+                    data-seat-id="<%= seat.id %>"
+                    data-seat-label="<%= seat.label %>"
+                    data-seat-type="<%= seat.seat_type %>"
+                    data-seat-price="<%= @showtime.price.to_f %>"
+                    title="<%= seat.label %><%= is_vip ? ' (VIP)' : is_couple ? ' (Couple)' : '' %>"
+                    <%= 'disabled' if booked %>
+                    class="<%= is_couple ? 'w-10' : 'w-8' %> h-8 rounded text-xs font-bold
+                           flex items-center justify-center transition-all duration-150 select-none
+                           <%= if booked
+                                 'bg-gray-800 border border-gray-700 text-gray-600 cursor-not-allowed opacity-50'
+                               elsif is_vip
+                                 'bg-yellow-900/40 border border-yellow-700/60 text-yellow-400 hover:bg-yellow-700/60 cursor-pointer'
+                               elsif is_couple
+                                 'bg-pink-900/40 border border-pink-700/60 text-pink-400 hover:bg-pink-700/60 cursor-pointer'
+                               else
+                                 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600 cursor-pointer'
+                               end %>">
+                    <%= seat.seat_number %>
+                  </button>
+                <% end %>
+              </div>
+              <span class="w-6 text-center text-xs font-bold text-gray-500 shrink-0"><%= row %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# ── RIGHT: BOOKING FORM ── %>
+      <div class="xl:w-80 shrink-0">
+        <%= form_with url: staff_bookings_path, method: :post,
+              data: { "seat-map-target": "form" } do %>
+          <%= hidden_field_tag :showtime_id, @showtime.id %>
+
+          <div class="space-y-4">
+
+            <%# Selected seats summary %>
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+              <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Ghế đã chọn</h3>
+              <div data-seat-map-target="selectedDisplay" class="min-h-10 flex flex-wrap gap-1.5 mb-3">
+                <span class="text-xs text-gray-600 italic">Chưa chọn ghế nào</span>
+              </div>
+              <p data-seat-map-target="maxWarning"
+                 class="hidden text-xs text-orange-400 bg-orange-900/20 border border-orange-800/40
+                        rounded px-2 py-1.5 mb-3">
+                Tối đa 8 ghế mỗi lần đặt.
+              </p>
+              <div data-seat-map-target="hiddenInputs"></div>
+
+              <hr class="border-gray-800 my-3">
+
+              <div class="flex justify-between text-sm text-gray-400 mb-1">
+                <span>Số ghế</span>
+                <span data-seat-map-target="seatCount">0</span>
+              </div>
+              <div class="flex justify-between text-sm text-gray-400 mb-1">
+                <span>Đơn giá</span>
+                <span><%= format_price(@showtime.price) %></span>
+              </div>
+              <div class="flex justify-between text-base font-bold text-white border-t border-gray-800 pt-2 mt-2">
+                <span>Tổng</span>
+                <span data-seat-map-target="totalPrice">0₫</span>
+              </div>
+            </div>
+
+            <%# Customer section %>
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+              <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Khách hàng</h3>
+
+              <%# Customer email lookup %>
+              <div class="mb-3">
+                <label class="block text-xs text-gray-500 mb-1">Email tài khoản (tuỳ chọn)</label>
+                <%= text_field_tag :customer_email, params[:customer_email],
+                      placeholder: "email@example.com",
+                      class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                              placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" %>
+                <p class="text-xs text-gray-600 mt-1">Bỏ trống nếu là khách vãng lai.</p>
+              </div>
+
+              <%# Guest name %>
+              <div class="mb-3">
+                <label class="block text-xs text-gray-500 mb-1">Tên khách <span class="text-red-400">*</span> <span class="text-gray-600">(nếu không có tài khoản)</span></label>
+                <%= text_field_tag :guest_name, params[:guest_name],
+                      placeholder: "Nguyễn Văn A",
+                      class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                              placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" %>
+              </div>
+
+              <%# Guest phone %>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Số điện thoại</label>
+                <%= telephone_field_tag :guest_phone, params[:guest_phone],
+                      placeholder: "0901 234 567",
+                      class: "w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white
+                              placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" %>
+              </div>
+            </div>
+
+            <%# Payment section %>
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+              <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Thanh toán</h3>
+
+              <%# Payment method %>
+              <div class="mb-4">
+                <label class="block text-xs text-gray-500 mb-2">Phương thức</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <% [[:cash, "Tiền mặt"], [:card, "Thẻ ngân hàng"]].each do |value, label| %>
+                    <label class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5
+                                  cursor-pointer hover:border-blue-600 has-[:checked]:border-blue-500
+                                  has-[:checked]:bg-blue-600/10 transition-colors">
+                      <%= radio_button_tag :payment_method, value, value == :cash,
+                            class: "accent-blue-500" %>
+                      <span class="text-sm text-gray-300"><%= label %></span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+
+              <%# Mark as paid toggle %>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <%= check_box_tag :mark_paid, "1", true,
+                      class: "w-4 h-4 accent-blue-500" %>
+                <span class="text-sm text-gray-300">Thu tiền ngay</span>
+              </label>
+              <p class="text-xs text-gray-600 mt-1 ml-7">Bỏ chọn nếu khách thanh toán sau.</p>
+            </div>
+
+            <%# Submit %>
+            <button type="submit"
+                    data-seat-map-target="submitBtn"
+                    disabled
+                    class="w-full py-3 text-sm font-bold rounded-xl transition-all
+                           bg-blue-600 hover:bg-blue-700 text-white
+                           disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-600">
+              Xác nhận đặt vé
+            </button>
+
+          </div>
+        <% end %>
+      </div>
+
+    </div>
+  </div>
+</div>

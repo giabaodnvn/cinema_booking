@@ -1,0 +1,74 @@
+<%# locals: (movie:) %>
+<div class="group bg-gray-900 rounded-xl overflow-hidden border border-gray-800
+            hover:border-gray-600 transition-all duration-300
+            hover:shadow-xl hover:shadow-black/60 hover:-translate-y-0.5">
+
+  <%# ── Poster ── %>
+  <div class="relative aspect-[2/3] overflow-hidden bg-gray-800">
+    <% if movie.poster.attached? %>
+      <%= image_tag url_for(movie.poster),
+            class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-500",
+            alt: movie.title,
+            loading: "lazy" %>
+    <% else %>
+      <%# Gradient placeholder with first letter %>
+      <div class="w-full h-full flex items-center justify-center
+                  bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900
+                  group-hover:from-gray-600 transition-colors duration-300">
+        <span class="text-7xl font-black text-gray-600 select-none leading-none">
+          <%= movie.title[0] %>
+        </span>
+      </div>
+    <% end %>
+
+    <%# Status badge – top left %>
+    <div class="absolute top-2 left-2">
+      <% if movie.now_showing? %>
+        <span class="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow">ĐANG CHIẾU</span>
+      <% elsif movie.upcoming? %>
+        <span class="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow">SẮP CHIẾU</span>
+      <% end %>
+    </div>
+
+    <%# Age rating – top right %>
+    <div class="absolute top-2 right-2">
+      <%= age_rating_badge(movie.age_rating) %>
+    </div>
+
+    <%# Hover overlay with CTA %>
+    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent
+                opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                flex items-end justify-center pb-4">
+      <% if movie.now_showing? %>
+        <%= link_to "Đặt vé ngay", movie_path(movie),
+              class: "px-5 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-semibold
+                      transition-colors shadow-lg transform translate-y-2 group-hover:translate-y-0
+                      transition-transform duration-300" %>
+      <% else %>
+        <%= link_to "Xem chi tiết", movie_path(movie),
+              class: "px-5 py-2 bg-gray-700/90 hover:bg-gray-600 rounded-lg text-sm font-semibold
+                      transition-colors backdrop-blur-sm" %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# ── Info ── %>
+  <div class="p-3">
+    <h3 class="font-semibold text-sm text-white line-clamp-2 leading-tight mb-1.5">
+      <%= link_to movie.title, movie_path(movie),
+            class: "hover:text-red-400 transition-colors" %>
+    </h3>
+    <div class="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap">
+      <span><%= format_duration(movie.duration) %></span>
+      <% movie.genres.first(2).each_with_index do |genre, i| %>
+        <span class="text-gray-700">·</span>
+        <span><%= genre.name %></span>
+      <% end %>
+    </div>
+    <% if movie.release_date.present? && movie.upcoming? %>
+      <p class="mt-1.5 text-xs text-blue-400 font-medium">
+        <%= movie.release_date.strftime("%d/%m/%Y") %>
+      </p>
+    <% end %>
+  </div>
+</div>
