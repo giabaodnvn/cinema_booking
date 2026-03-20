@@ -51,7 +51,9 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :movies, only: [ :index, :show ]
+  resources :movies,  only: [:index, :show]
+  resources :cinemas, only: [:index, :show]
+  resources :showtimes, only: [:index]
 
   # ── Booking flow ──────────────────────────────────────────────────
   get  "showtimes/:id/seats",         to: "seat_selections#show",  as: :showtime_seats

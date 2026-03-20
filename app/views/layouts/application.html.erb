@@ -33,9 +33,12 @@
 
           <!-- Nav Links -->
           <nav class="hidden md:flex items-center gap-6">
-            <%= link_to "Phim", movies_path, class: "text-sm text-gray-300 hover:text-white transition-colors #{current_page?(movies_path) ? 'text-white font-medium' : ''}" %>
-            <%= link_to "Rạp chiếu", "#", class: "text-sm text-gray-300 hover:text-white transition-colors" %>
-            <%= link_to "Lịch chiếu", "#", class: "text-sm text-gray-300 hover:text-white transition-colors" %>
+            <%= link_to "Phim", movies_path,
+                  class: "text-sm hover:text-white transition-colors #{request.path.start_with?(movies_path) ? 'text-white font-medium' : 'text-gray-300'}" %>
+            <%= link_to "Rạp chiếu", cinemas_path,
+                  class: "text-sm hover:text-white transition-colors #{request.path.start_with?(cinemas_path) ? 'text-white font-medium' : 'text-gray-300'}" %>
+            <%= link_to "Lịch chiếu", showtimes_path,
+                  class: "text-sm hover:text-white transition-colors #{current_page?(showtimes_path) ? 'text-white font-medium' : 'text-gray-300'}" %>
           </nav>
 
           <!-- Auth -->
