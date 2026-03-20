@@ -1,7 +1,7 @@
 module Staff
   class BookingsController < Staff::BaseController
     before_action :set_showtime, only: [:seats, :create]
-    before_action :set_booking,  only: [:show]
+    before_action :set_booking,  only: [:show, :mark_paid, :cancel]
 
     # GET /staff/bookings — list today's offline bookings + quick stats
     def index
@@ -99,6 +99,36 @@ module Staff
     # GET /staff/bookings/:id — receipt
     def show
       # @booking set by set_booking
+    end
+
+    # PATCH /staff/bookings/:id/mark_paid
+    def mark_paid
+      if @booking.cancelled?
+        redirect_to staff_booking_path(@booking), alert: "Vé đã huỷ, không thể thu tiền."
+        return
+      end
+
+      ActiveRecord::Base.transaction do
+        @booking.payment.update!(status: :completed, paid_at: Time.current)
+        @booking.update!(status: :paid)
+      end
+
+      redirect_to staff_booking_path(@booking), notice: "Đã xác nhận thanh toán cho vé #{@booking.booking_code}."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to staff_booking_path(@booking), alert: e.message
+    end
+
+    # PATCH /staff/bookings/:id/cancel
+    def cancel
+      if @booking.cancelled?
+        redirect_to staff_booking_path(@booking), alert: "Vé đã được huỷ trước đó."
+        return
+      end
+
+      @booking.update!(status: :cancelled)
+      redirect_to staff_booking_path(@booking), notice: "Đã huỷ vé #{@booking.booking_code}."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to staff_booking_path(@booking), alert: e.message
     end
 
     private

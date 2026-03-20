@@ -10,6 +10,8 @@ class User < ApplicationRecord
   validates :name, presence: true
   validates :phone, format: { with: /\A[\d\s\-\+\(\)]{7,20}\z/ }, allow_blank: true
 
+  after_create_commit :send_welcome_email
+
   # Role helpers
   def customer? = role == "customer"
   def staff?    = role == "staff"
@@ -21,5 +23,11 @@ class User < ApplicationRecord
 
   def can_access_staff?
     staff? || admin?
+  end
+
+  private
+
+  def send_welcome_email
+    UserMailer.welcome(self).deliver_now
   end
 end

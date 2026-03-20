@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+  if Rails.env.development?
+    mount LetterOpenerWeb::Engine, at: "/letter_opener"
+  end
+
   devise_for :users
 
   namespace :admin do
@@ -6,7 +10,12 @@ Rails.application.routes.draw do
 
     resources :users,   only: [:index, :show, :edit, :update]
     resources :genres
-    resources :bookings, only: [:index, :show]
+    resources :bookings, only: [:index, :show] do
+      member do
+        patch :mark_paid
+        patch :cancel
+      end
+    end
     resources :reports,  only: [:index]
 
     resources :movies do
@@ -35,6 +44,10 @@ Rails.application.routes.draw do
         # Step 2 of counter booking flow: seat map for chosen showtime
         get :seats
       end
+      member do
+        patch :mark_paid
+        patch :cancel
+      end
     end
   end
 
@@ -43,7 +56,8 @@ Rails.application.routes.draw do
   # ── Booking flow ──────────────────────────────────────────────────
   get  "showtimes/:id/seats",         to: "seat_selections#show",  as: :showtime_seats
   post "showtimes/:showtime_id/bookings", to: "bookings#create",   as: :showtime_bookings
-  get  "bookings/:id/confirmation",   to: "bookings#confirmation", as: :confirmation_booking
+  get   "bookings/:id/confirmation",      to: "bookings#confirmation",      as: :confirmation_booking
+  patch "bookings/:id/simulate_payment",  to: "bookings#simulate_payment",  as: :simulate_payment_booking
 
   namespace :customer do
     resource  :profile,  only: [ :show, :edit, :update ]

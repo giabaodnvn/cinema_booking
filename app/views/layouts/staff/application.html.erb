@@ -9,6 +9,7 @@
     <link rel="icon" href="/icon.png" type="image/png">
     <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <%= javascript_importmap_tags %>
   </head>
 
@@ -50,13 +51,10 @@
       </div>
     </header>
 
-    <!-- Flash -->
-    <% if notice.present? %>
-      <div class="bg-green-800/80 border-b border-green-700 text-green-200 px-4 py-2 text-sm text-center"><%= notice %></div>
-    <% end %>
-    <% if alert.present? %>
-      <div class="bg-red-800/80 border-b border-red-700 text-red-200 px-4 py-2 text-sm text-center"><%= alert %></div>
-    <% end %>
+    <!-- Flash data for SweetAlert2 -->
+    <div id="flash-data" class="hidden"
+         data-notice="<%= h notice.to_s %>"
+         data-alert="<%= h alert.to_s %>"></div>
 
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
       <%= yield %>

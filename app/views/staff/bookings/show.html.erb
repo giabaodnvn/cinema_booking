@@ -138,13 +138,29 @@
   </div>
 
   <%# ── NEXT ACTIONS ── %>
-  <div class="mt-5 flex gap-3">
+  <div class="mt-5 flex flex-wrap gap-3">
     <%= link_to "＋ Đặt vé tiếp theo", new_staff_booking_path,
           class: "flex-1 text-center py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm
                   font-semibold rounded-xl transition-colors" %>
     <%= link_to "Danh sách vé", staff_bookings_path,
           class: "px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white
                   text-sm font-semibold rounded-xl transition-colors" %>
+
+    <% if @booking.payment&.pending? && !@booking.cancelled? %>
+      <%= button_to "✓ Thu tiền", mark_paid_staff_booking_path(@booking), method: :patch,
+            data: { controller: "swal-confirm", action: "submit->swal-confirm#confirm",
+                    "swal-confirm-message-value": "Xác nhận đã thu tiền vé #{@booking.booking_code}?" },
+            class: "px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm
+                    font-semibold rounded-xl transition-colors cursor-pointer" %>
+    <% end %>
+
+    <% unless @booking.cancelled? %>
+      <%= button_to "✕ Huỷ vé", cancel_staff_booking_path(@booking), method: :patch,
+            data: { controller: "swal-confirm", action: "submit->swal-confirm#confirm",
+                    "swal-confirm-message-value": "Huỷ vé #{@booking.booking_code}? Thao tác này không thể hoàn tác." },
+            class: "px-5 py-2.5 bg-red-700 hover:bg-red-800 text-white text-sm
+                    font-semibold rounded-xl transition-colors cursor-pointer" %>
+    <% end %>
   </div>
 
 </div>

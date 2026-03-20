@@ -1,0 +1,26 @@
+ĐẶT VÉ THÀNH CÔNG – CINEMABOOKING
+===================================
+
+Mã đặt vé: <%= @booking.booking_code %>
+
+THÔNG TIN PHIM
+--------------
+Phim      : <%= @movie.title %>
+Rạp chiếu : <%= @cinema.name %>
+Phòng     : <%= @room.name %>
+Ngày      : <%= I18n.l(@showtime.start_time.to_date, format: :long) %>
+Giờ       : <%= I18n.l(@showtime.start_time, format: :time) %> – <%= I18n.l(@showtime.end_time, format: :time) %>
+
+GHẾ NGỒI
+---------
+<% @seats.each do |bs| %>- <%= bs.seat.label %> (<%= bs.seat.seat_type %>)
+<% end %>
+
+THANH TOÁN
+----------
+Tổng tiền : <%= number_to_currency(@booking.total_amount, unit: "đ", separator: ".", delimiter: ",", format: "%n%u", precision: 0) %>
+Trạng thái: <%= @payment&.pending? ? "Chờ thanh toán" : "Đã thanh toán" %>
+
+---
+Vui lòng mang mã đặt vé <%= @booking.booking_code %> khi đến rạp.
+Cảm ơn bạn đã sử dụng CinemaBooking!

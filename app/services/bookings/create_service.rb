@@ -52,6 +52,8 @@ module Bookings
     def call
       validate_input!
 
+      booking = nil
+
       ActiveRecord::Base.transaction do
         # Pessimistic lock on showtime row — serialises concurrent bookings
         # for the same showtime so the seat-availability check is race-safe.
@@ -62,10 +64,11 @@ module Bookings
           booking = create_booking!
           create_booking_seats!(booking)
           create_payment!(booking)
-
-          return Result.new(success?: true, booking: booking, errors: [])
         end
       end
+
+      send_confirmation_email(booking)
+      Result.new(success?: true, booking: booking, errors: [])
 
     rescue BookingError => e
       Result.new(success?: false, booking: nil, errors: [e.message])
@@ -82,6 +85,13 @@ module Bookings
     private
 
     class BookingError < StandardError; end
+
+    # ── Email notification ─────────────────────────────────────────────
+    def send_confirmation_email(booking)
+      return unless booking&.online? && booking.user&.email.present?
+
+      BookingMailer.booking_confirmation(booking).deliver_now
+    end
 
     # ── Input validation (before hitting the DB) ──────────────────────
     def validate_input!
@@ -119,12 +129,14 @@ module Bookings
 
     # ── Record creation ────────────────────────────────────────────────
     def create_booking!
+      booking_status = @payment_status.to_sym == :completed ? :paid : :pending
+
       Booking.create!(
         user:         @user,
         showtime:     @showtime,
         total_amount: @showtime.price * @seat_ids.size,
         booking_type: @booking_type,
-        status:       :pending,
+        status:       booking_status,
         created_by:   @created_by,
         guest_name:   @guest_name,
         guest_phone:  @guest_phone

@@ -24,7 +24,7 @@ class MoviesController < ApplicationController
                    .distinct
     end
 
-    scope = scope.order(Arel.sql("FIELD(status, 'now_showing', 'upcoming', 'draft', 'ended'), updated_at DESC"))
+    scope = scope.order(Arel.sql("FIELD(movies.status, 'now_showing', 'upcoming', 'draft', 'ended'), movies.updated_at DESC"))
 
     @pagy, @movies = pagy(scope, items: 12)
   end

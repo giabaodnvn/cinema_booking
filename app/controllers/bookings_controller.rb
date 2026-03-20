@@ -2,7 +2,7 @@ class BookingsController < ApplicationController
   before_action :authenticate_user!
   before_action :ensure_customer!
   before_action :set_showtime,  only: [:create]
-  before_action :set_booking,   only: [:confirmation]
+  before_action :set_booking,   only: [:confirmation, :simulate_payment]
 
   def create
     seat_ids = params[:seat_ids].to_a
@@ -24,6 +24,24 @@ class BookingsController < ApplicationController
 
   def confirmation
     # @booking set by set_booking
+  end
+
+  def simulate_payment
+    unless @booking.payment&.pending?
+      redirect_to confirmation_booking_path(@booking), alert: "Vé này đã được xử lý."
+      return
+    end
+
+    ActiveRecord::Base.transaction do
+      @booking.payment.update!(
+        status:           :completed,
+        paid_at:          Time.current,
+        transaction_code: "SIM-#{SecureRandom.hex(6).upcase}"
+      )
+      @booking.update!(status: :paid)
+    end
+
+    redirect_to confirmation_booking_path(@booking), notice: "Thanh toán thành công!"
   end
 
   private

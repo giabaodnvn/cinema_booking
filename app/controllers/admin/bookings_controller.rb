@@ -1,6 +1,6 @@
 module Admin
   class BookingsController < Admin::BaseController
-    before_action :set_booking, only: [:show]
+    before_action :set_booking, only: [:show, :mark_paid, :cancel]
 
     # GET /admin/bookings
     def index
@@ -40,6 +40,44 @@ module Admin
     # GET /admin/bookings/:id
     def show
       # @booking set by set_booking
+    end
+
+    # PATCH /admin/bookings/:id/mark_paid
+    def mark_paid
+      if @booking.cancelled?
+        redirect_to admin_booking_path(@booking), alert: "Vé đã huỷ, không thể xác nhận thanh toán."
+        return
+      end
+      if @booking.payment&.completed?
+        redirect_to admin_booking_path(@booking), alert: "Vé này đã được thanh toán."
+        return
+      end
+
+      ActiveRecord::Base.transaction do
+        @booking.payment.update!(
+          status:           :completed,
+          paid_at:          Time.current,
+          transaction_code: @booking.payment.transaction_code.presence || "ADMIN-#{SecureRandom.hex(6).upcase}"
+        )
+        @booking.update!(status: :paid)
+      end
+
+      redirect_to admin_booking_path(@booking), notice: "Đã xác nhận thanh toán cho vé #{@booking.booking_code}."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to admin_booking_path(@booking), alert: e.message
+    end
+
+    # PATCH /admin/bookings/:id/cancel
+    def cancel
+      if @booking.cancelled?
+        redirect_to admin_booking_path(@booking), alert: "Vé đã được huỷ trước đó."
+        return
+      end
+
+      @booking.update!(status: :cancelled)
+      redirect_to admin_booking_path(@booking), notice: "Đã huỷ vé #{@booking.booking_code}."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to admin_booking_path(@booking), alert: e.message
     end
 
     private

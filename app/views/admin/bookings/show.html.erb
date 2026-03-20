@@ -162,9 +162,25 @@
     </div>
   </div>
 
-  <%# Back %>
-  <div class="mt-6">
+  <%# ── ACTIONS ── %>
+  <div class="mt-6 flex flex-wrap items-center gap-3">
     <%= link_to "← Quay lại danh sách", admin_bookings_path,
-          class: "text-sm text-gray-400 hover:text-white transition-colors" %>
+          class: "text-sm text-gray-400 hover:text-white transition-colors mr-auto" %>
+
+    <% if @booking.payment&.pending? && !@booking.cancelled? %>
+      <%= button_to "✓ Xác nhận thanh toán", mark_paid_admin_booking_path(@booking), method: :patch,
+            data: { controller: "swal-confirm", action: "submit->swal-confirm#confirm",
+                    "swal-confirm-message-value": "Xác nhận đã thanh toán cho vé #{@booking.booking_code}?" },
+            class: "px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold
+                    rounded-lg transition-colors cursor-pointer" %>
+    <% end %>
+
+    <% unless @booking.cancelled? %>
+      <%= button_to "✕ Huỷ vé", cancel_admin_booking_path(@booking), method: :patch,
+            data: { controller: "swal-confirm", action: "submit->swal-confirm#confirm",
+                    "swal-confirm-message-value": "Huỷ vé #{@booking.booking_code}? Thao tác này không thể hoàn tác." },
+            class: "px-4 py-2 bg-red-700 hover:bg-red-800 text-white text-sm font-semibold
+                    rounded-lg transition-colors cursor-pointer" %>
+    <% end %>
   </div>
 </div>
