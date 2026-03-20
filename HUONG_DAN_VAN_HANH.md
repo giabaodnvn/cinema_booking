@@ -12,8 +12,9 @@
 4. [Hướng dẫn Admin](#4-hướng-dẫn-admin)
 5. [Hướng dẫn Staff (Nhân viên quầy)](#5-hướng-dẫn-staff-nhân-viên-quầy)
 6. [Quy trình đặt vé của khách hàng](#6-quy-trình-đặt-vé-của-khách-hàng)
-7. [Xử lý sự cố thường gặp](#7-xử-lý-sự-cố-thường-gặp)
-8. [Backup và bảo trì](#8-backup-và-bảo-trì)
+7. [Hệ thống Email](#7-hệ-thống-email)
+8. [Xử lý sự cố thường gặp](#8-xử-lý-sự-cố-thường-gặp)
+9. [Backup và bảo trì](#9-backup-và-bảo-trì)
 
 ---
 
@@ -48,9 +49,10 @@ Internet ──► Nginx (reverse proxy) ──► Puma (Rails app :3000)
 - **Framework:** Ruby on Rails 7.2
 - **Database:** MySQL (utf8mb4)
 - **Cache / Queue:** Redis + Sidekiq
-- **Frontend:** Tailwind CSS + Stimulus JS + Turbo
+- **Frontend:** Tailwind CSS + Stimulus JS + Turbo + SweetAlert2
 - **Auth:** Devise (email + password)
 - **File upload:** Active Storage (local disk)
+- **Email:** ActionMailer + SMTP (Mailtrap sandbox / Gmail)
 
 ---
 
@@ -221,6 +223,17 @@ Xem toàn bộ đơn đặt vé với bộ lọc:
 - **Trạng thái:** Chờ thanh toán / Đã thanh toán / Đã huỷ
 - **Ngày:** Lọc theo ngày tạo
 
+#### Thao tác trên chi tiết đơn vé
+
+Vào **Admin → Đặt vé → chọn đơn**, có thể thực hiện:
+
+| Nút | Điều kiện | Tác dụng |
+|-----|-----------|---------|
+| **✓ Xác nhận thanh toán** | Payment đang chờ & vé chưa huỷ | Đánh dấu đã thu tiền (payment → completed, booking → paid) |
+| **✕ Huỷ vé** | Vé chưa bị huỷ | Huỷ đơn (booking → cancelled) |
+
+> ⚠️ Tất cả thao tác đều hiện hộp thoại xác nhận SweetAlert2 trước khi thực hiện. Không thể hoàn tác sau khi huỷ vé.
+
 ### 4.7 Báo cáo Doanh thu
 
 **Đường dẫn:** Admin → Báo cáo
@@ -294,7 +307,18 @@ Trong sidebar phải:
 - Hệ thống hiện trang Receipt với mã vé (format: `BKxxxxxxxx`)
 - In hoặc đọc mã vé cho khách
 
-### 5.4 Lưu ý quan trọng
+### 5.4 Cập nhật trạng thái vé tại quầy
+
+Sau khi đặt vé, Staff có thể vào trang chi tiết vé (`/staff/bookings/:id`) để:
+
+| Nút | Điều kiện | Tác dụng |
+|-----|-----------|---------|
+| **✓ Thu tiền** | Payment đang chờ & vé chưa huỷ | Đánh dấu đã thu tiền |
+| **✕ Huỷ vé** | Vé chưa bị huỷ | Huỷ đơn, ghế được giải phóng |
+
+> 💡 Khi đặt vé và chọn **"Thu tiền ngay"**, hệ thống tự động đặt trạng thái thành **Đã thanh toán** ngay lúc tạo.
+
+### 5.5 Lưu ý quan trọng
 
 - Ghế đã đặt (kể cả đơn online) sẽ hiển thị xám mờ và không thể chọn
 - Đơn bị huỷ sẽ giải phóng ghế để đặt lại
@@ -325,11 +349,21 @@ Trong sidebar phải:
 - Xem tổng tiền cập nhật realtime
 - Bấm **Đặt vé** khi đã chọn xong
 
-### Bước 5 — Xác nhận
+### Bước 5 — Xác nhận và thanh toán
 
 - Hệ thống tạo đơn và redirect về trang xác nhận
 - Mã vé hiển thị ngay (format: `BKxxxxxxxx`)
-- Khách có thể xem lại tại `/customer/bookings`
+- Trạng thái mặc định: **Chờ thanh toán** (payment method: VNPay)
+
+#### Giả lập thanh toán (môi trường demo)
+
+Vì chưa tích hợp cổng thanh toán thật, trang xác nhận hiển thị nút **"Giả lập thanh toán thành công"**:
+
+1. Bấm nút → hộp thoại xác nhận hiện ra
+2. Bấm **Xác nhận** → trạng thái đơn chuyển sang **Đã thanh toán**
+3. Hệ thống tạo mã giao dịch dạng `SIM-XXXXXX`
+
+> ⚠️ Nút này chỉ xuất hiện khi payment đang ở trạng thái **Chờ thanh toán**. Sau khi thanh toán xong sẽ không còn hiển thị.
 
 ### Xem lịch sử đặt vé
 
@@ -338,7 +372,72 @@ Trong sidebar phải:
 
 ---
 
-## 7. Xử lý sự cố thường gặp
+## 7. Hệ thống Email
+
+### 7.1 Các loại email hệ thống gửi
+
+| Sự kiện | Người nhận | Nội dung |
+|---------|-----------|---------|
+| Đăng ký tài khoản mới | Người đăng ký | Email chào mừng, thông tin tài khoản, link xem phim |
+| Đặt vé online thành công | Khách hàng | Mã vé, thông tin phim/suất/ghế, trạng thái thanh toán |
+
+> 💡 Email đặt vé chỉ được gửi cho đơn **online** có địa chỉ email. Đơn tại quầy không gửi email.
+
+### 7.2 Cấu hình SMTP (file `.env`)
+
+| Biến | Mô tả |
+|------|-------|
+| `MAILER_FROM` | Địa chỉ gửi đi (VD: `no-reply@cinemabooking.com`) |
+| `SMTP_HOST` | SMTP server (VD: `smtp.gmail.com` hoặc `sandbox.smtp.mailtrap.io`) |
+| `SMTP_PORT` | Cổng SMTP (thường `587`) |
+| `SMTP_USERNAME` | Tên đăng nhập SMTP |
+| `SMTP_PASSWORD` | Mật khẩu SMTP |
+
+**Lưu ý quan trọng:** Nếu không set `SMTP_HOST` trong `.env`, môi trường development sẽ dùng **Letter Opener** (email hiển thị tại `/letter_opener` thay vì gửi thật).
+
+### 7.3 Dùng Mailtrap để test (khuyến nghị)
+
+[Mailtrap](https://mailtrap.io) là sandbox SMTP — email được giữ lại trong dashboard, không gửi ra ngoài:
+
+1. Đăng ký tài khoản Mailtrap miễn phí
+2. Vào **Inboxes → SMTP Settings** → copy credentials
+3. Điền vào `.env`:
+
+```env
+SMTP_HOST=sandbox.smtp.mailtrap.io
+SMTP_PORT=587
+SMTP_USERNAME=<username từ Mailtrap>
+SMTP_PASSWORD=<password từ Mailtrap>
+```
+
+4. Restart server → đăng ký tài khoản mới → kiểm tra inbox Mailtrap
+
+### 7.4 Dùng Gmail (production)
+
+1. Bật **2-Step Verification** trên Google Account
+2. Vào **Security → App passwords** → tạo App Password (16 ký tự)
+3. Điền vào `.env`:
+
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=xxxx xxxx xxxx xxxx
+```
+
+### 7.5 Kiểm tra email trong development (Letter Opener)
+
+Nếu chưa cấu hình SMTP, email được lưu local và xem tại:
+
+```
+http://localhost:3002/letter_opener
+```
+
+> Route `/letter_opener` chỉ hoạt động ở môi trường **development**, không có trên production.
+
+---
+
+## 8. Xử lý sự cố thường gặp
 
 ### Lỗi: "Một hoặc nhiều ghế đã được đặt"
 
@@ -397,7 +496,7 @@ docker compose exec web bin/rails runner "Rails.cache.clear"
 
 ---
 
-## 8. Backup và bảo trì
+## 9. Backup và bảo trì
 
 ### Backup database
 
@@ -439,6 +538,11 @@ docker compose exec web bundle outdated
 | `SECRET_KEY_BASE` | Khóa bí mật Rails | Tạo bằng `bin/rails secret` |
 | `RAILS_ENV` | Môi trường | `production` |
 | `APP_HOST` | Domain | `cinema.yourdomain.com` |
+| `MAILER_FROM` | Địa chỉ email gửi | `no-reply@cinemabooking.com` |
+| `SMTP_HOST` | SMTP server | `smtp.gmail.com` |
+| `SMTP_PORT` | SMTP port | `587` |
+| `SMTP_USERNAME` | SMTP username | `your_email@gmail.com` |
+| `SMTP_PASSWORD` | SMTP password / App Password | `xxxx xxxx xxxx xxxx` |
 
 > ⚠️ **Quan trọng:** Không commit file `.env` vào Git. Thêm vào `.gitignore`.
 
@@ -459,10 +563,12 @@ docker compose exec web bundle outdated
 | Báo cáo doanh thu | `/admin/reports` |
 | Staff counter | `/staff` |
 | Đặt vé tại quầy | `/staff/bookings/new` |
+| Danh sách vé tại quầy | `/staff/bookings` |
 | Vé của khách hàng | `/customer/bookings` |
 | Hồ sơ cá nhân | `/customer/profile` |
+| Xem email (dev) | `/letter_opener` |
 | Health check | `/up` |
 
 ---
 
-*Tài liệu này được tạo cho phiên bản CinemaBook Rails 7.2. Cập nhật lần cuối: 19/03/2026.*
+*Tài liệu này được tạo cho phiên bản CinemaBook Rails 7.2. Cập nhật lần cuối: 20/03/2026.*
