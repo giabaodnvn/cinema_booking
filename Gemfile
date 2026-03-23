@@ -25,6 +25,7 @@ gem "groupdate"
 
 # Background jobs
 gem "sidekiq"
+gem "sidekiq-cron"
 gem "redis", ">= 4.0.1"
 
 # Security

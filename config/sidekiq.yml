@@ -1,0 +1,10 @@
+:concurrency: 5
+:queues:
+  - default
+
+:cron_jobs:
+  finish_past_showtimes:
+    cron: "0 * * * *"   # mỗi giờ một lần
+    class: "FinishPastShowtimesJob"
+    queue: default
+    description: "Tự động đánh dấu suất chiếu đã qua là hoàn thành"
