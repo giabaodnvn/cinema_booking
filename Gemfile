@@ -17,7 +17,7 @@ gem "pundit"
 
 # UI
 gem "tailwindcss-rails"
-gem 'pagy', '< 9.0'
+gem 'pagy', '< 44.0'
 
 # Admin helpers
 gem "chartkick"
